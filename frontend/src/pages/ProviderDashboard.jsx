@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChefHat, Plus, Pencil, Trash2, Save, X,
@@ -9,6 +9,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { providers as providersApi, menu as menuApi, orders as ordersApi, upload } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { useAutoRefresh } from '../hooks/useAutoRefresh'
 
 const TABS = ['Kitchen', 'Menu', 'Orders']
 
@@ -48,31 +49,30 @@ export default function ProviderDashboard() {
   const [menuImgFile, setMenuImgFile] = useState(null)
   const menuImgRef = useRef()
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [pData, oData] = await Promise.all([
-          providersApi.myProfile().catch(() => null),
-          ordersApi.list().catch(() => ({ orders: [] })),
-        ])
+  const load = useCallback(async () => {
+    try {
+      const [pData, oData] = await Promise.all([
+        providersApi.myProfile().catch(() => null),
+        ordersApi.list().catch(() => ({ orders: [] })),
+      ])
 
-        if (pData?.provider) {
-          setProvider(pData.provider)
-          setKitchenForm(pData.provider)
-          const mData = await menuApi.list(pData.provider.id)
-          setMenuItems(mData.items || [])
-        } else {
-          // Default empty kitchen form
-          setKitchenForm({ kitchen_name: '', location: '', city: 'Kolkata', description: '', phone: '', delivery_time: '', price_from: 60, is_veg: false, is_nonveg: false })
-        }
-
-        setOrderList(oData.orders || [])
-      } finally {
-        setLoading(false)
+      if (pData?.provider) {
+        setProvider(pData.provider)
+        setKitchenForm(p => p ?? pData.provider)  // don't overwrite in-progress edits
+        const mData = await menuApi.list(pData.provider.id)
+        setMenuItems(mData.items || [])
+      } else {
+        setKitchenForm(p => p ?? { kitchen_name: '', location: '', city: 'Kolkata', description: '', phone: '', delivery_time: '', price_from: 60, is_veg: false, is_nonveg: false })
       }
+
+      setOrderList(oData.orders || [])
+    } finally {
+      setLoading(false)
     }
-    load()
   }, [])
+
+  useEffect(() => { load() }, [load])
+  useAutoRefresh(load)
 
   function showFlash(type, msg) {
     setFlash({ type, msg })

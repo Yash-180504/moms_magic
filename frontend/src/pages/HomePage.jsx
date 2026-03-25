@@ -5,6 +5,7 @@ import ProviderCard from '../components/ProviderCard'
 import HowItWorks from '../components/HowItWorks'
 import Footer from '../components/Footer'
 import { providers as providersApi } from '../lib/api'
+import { useAutoRefresh } from '../hooks/useAutoRefresh'
 
 const CATEGORIES = [
   { id: 'all',    label: 'All' },
@@ -67,6 +68,8 @@ export default function HomePage() {
     const debounce = setTimeout(fetchProviders, 300)
     return () => clearTimeout(debounce)
   }, [fetchProviders])
+
+  useAutoRefresh(fetchProviders)
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FFF7ED]">

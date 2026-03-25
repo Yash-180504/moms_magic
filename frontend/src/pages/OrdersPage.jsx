@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ShoppingBag } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
@@ -6,6 +6,7 @@ import Footer from '../components/Footer'
 import { OrderCard } from './ProviderDashboard'
 import { orders as ordersApi } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { useAutoRefresh } from '../hooks/useAutoRefresh'
 
 export default function OrdersPage() {
   const { user } = useAuth()
@@ -13,12 +14,15 @@ export default function OrdersPage() {
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState(null)
 
-  useEffect(() => {
+  const fetchOrders = useCallback(() => {
     ordersApi.list()
       .then(data => setOrderList(data.orders || []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => { fetchOrders() }, [fetchOrders])
+  useAutoRefresh(fetchOrders)
 
   async function cancelOrder(id) {
     try {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   MapPin, Star, Clock, ShieldCheck, ChefHat,
@@ -8,6 +8,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { providers as providersApi, menu as menuApi, orders as ordersApi } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { useAutoRefresh } from '../hooks/useAutoRefresh'
 
 function gradient(id = '') {
   const hues = [24, 142, 45, 0, 220, 280]
@@ -33,23 +34,23 @@ export default function ProviderDetailPage() {
   const [orderSuccess, setOrderSuccess] = useState(null)
   const [orderError, setOrderError] = useState(null)
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [pData, mData] = await Promise.all([
-          providersApi.get(id),
-          menuApi.list(id),
-        ])
-        setProvider(pData.provider)
-        setMenuItems(mData.items)
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
+  const load = useCallback(async () => {
+    try {
+      const [pData, mData] = await Promise.all([
+        providersApi.get(id),
+        menuApi.list(id),
+      ])
+      setProvider(pData.provider)
+      setMenuItems(mData.items)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-    load()
   }, [id])
+
+  useEffect(() => { load() }, [load])
+  useAutoRefresh(load)
 
   function addToCart(itemId) {
     setCart(prev => ({ ...prev, [itemId]: (prev[itemId] || 0) + 1 }))
@@ -187,7 +188,7 @@ export default function ProviderDetailPage() {
           {/* ── Cart / Order form ── */}
           <aside className="lg:sticky lg:top-20 self-start">
             <div className="bg-white rounded-2xl border border-[#FCEAE1] shadow-sm overflow-hidden">
-              <div className="bg-gradient-to-r from-[#EA580C] to-[#F97316] px-5 py-4 flex items-center gap-2 text-white">
+              <div className="bg-linear-to-r from-[#EA580C] to-[#F97316] px-5 py-4 flex items-center gap-2 text-white">
                 <ShoppingCart size={20} />
                 <span className="font-heading font-bold text-lg">Your Order</span>
                 {cartItems.length > 0 && (

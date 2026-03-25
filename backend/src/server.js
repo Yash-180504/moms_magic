@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import http from 'http'
 import express from 'express'
 import cors from 'cors'
 
@@ -7,6 +8,7 @@ import providerRoutes from './routes/providers.js'
 import menuRoutes from './routes/menu.js'
 import orderRoutes from './routes/orders.js'
 import uploadRoutes from './routes/upload.js'
+import { createWebSocketServer } from './ws/index.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -38,6 +40,11 @@ app.use((err, _req, res, _next) => {
   res.status(status).json({ error: err.message || 'Internal server error' })
 })
 
-app.listen(PORT, () => {
+// Create HTTP server and attach WebSocket
+const httpServer = http.createServer(app)
+createWebSocketServer(httpServer)
+
+httpServer.listen(PORT, () => {
   console.log(`🍱 Mom's Magic backend running on http://localhost:${PORT}`)
+  console.log(`🔌 WebSocket server ready on ws://localhost:${PORT}`)
 })
