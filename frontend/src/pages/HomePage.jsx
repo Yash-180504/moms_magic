@@ -1,32 +1,72 @@
-import { useState } from 'react'
-import { Search, MapPin, ChefHat, Users, Star, TrendingUp } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Search, MapPin, ChefHat, Users, Star, TrendingUp, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProviderCard from '../components/ProviderCard'
 import HowItWorks from '../components/HowItWorks'
 import Footer from '../components/Footer'
-import { PROVIDERS, CATEGORIES } from '../data/mockProviders'
+import { providers as providersApi } from '../lib/api'
+
+const CATEGORIES = [
+  { id: 'all',    label: 'All' },
+  { id: 'veg',    label: 'Veg Only',  apiParam: { veg: 'true' } },
+  { id: 'nonveg', label: 'Non-Veg',   apiParam: { nonveg: 'true' } },
+]
 
 const STATS = [
-  { icon: ChefHat, value: '500+', label: 'Home Cooks', color: 'text-[#EA580C]' },
-  { icon: Users, value: '12,000+', label: 'Happy Customers', color: 'text-[#2563EB]' },
-  { icon: Star, value: '4.7', label: 'Avg Rating', color: 'text-amber-500' },
-  { icon: TrendingUp, value: '₹60–₹100', label: 'Per Meal', color: 'text-green-600' },
+  { icon: ChefHat,    value: '500+',      label: 'Home Cooks',       color: 'text-[#EA580C]' },
+  { icon: Users,      value: '12,000+',   label: 'Happy Customers',  color: 'text-[#2563EB]' },
+  { icon: Star,       value: '4.7',       label: 'Avg Rating',       color: 'text-amber-500' },
+  { icon: TrendingUp, value: '₹60–₹100', label: 'Per Meal',         color: 'text-green-600' },
 ]
+
+function ProviderSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl border border-[#FCEAE1] overflow-hidden animate-pulse">
+      <div className="h-40 bg-gray-200" />
+      <div className="p-4 space-y-3">
+        <div className="h-4 bg-gray-200 rounded w-3/4" />
+        <div className="h-3 bg-gray-200 rounded w-1/2" />
+        <div className="h-3 bg-gray-200 rounded w-full" />
+        <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+          <div className="h-5 bg-gray-200 rounded w-16" />
+          <div className="h-8 bg-gray-200 rounded-xl w-24" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery]       = useState('')
+  const [locationQuery, setLocationQuery]   = useState('')
+  const [providerList, setProviderList]     = useState([])
+  const [loading, setLoading]               = useState(true)
+  const [error, setError]                   = useState(null)
 
-  const filteredProviders = PROVIDERS.filter(provider => {
-    const matchesCategory =
-      activeCategory === 'all' || provider.tags.includes(activeCategory)
-    const matchesSearch =
-      searchQuery === '' ||
-      provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      provider.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      provider.specialty.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
+  const fetchProviders = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const catConfig = CATEGORIES.find(c => c.id === activeCategory)
+      const params = {
+        ...(catConfig?.apiParam || {}),
+        ...(locationQuery ? { city: locationQuery } : {}),
+        ...(searchQuery    ? { search: searchQuery } : {}),
+      }
+      const data = await providersApi.list(params)
+      setProviderList(data.providers || [])
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [activeCategory, searchQuery, locationQuery])
+
+  useEffect(() => {
+    const debounce = setTimeout(fetchProviders, 300)
+    return () => clearTimeout(debounce)
+  }, [fetchProviders])
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FFF7ED]">
@@ -43,7 +83,7 @@ export default function HomePage() {
             <span className="inline-block bg-[#EA580C]/10 text-[#EA580C] text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full mb-5">
               Home-cooked. Delivered daily.
             </span>
-            <h1 className="font-heading font-bold text-4xl sm:text-5xl lg:text-6xl text-[#0F172A] leading-tight mb-4">
+            <h1 id="hero-heading" className="font-heading font-bold text-4xl sm:text-5xl lg:text-6xl text-[#0F172A] leading-tight mb-4">
               Taste of home, <br />
               <span className="text-[#EA580C]">right at your door</span>
             </h1>
@@ -58,12 +98,15 @@ export default function HomePage() {
                 <input
                   type="text"
                   placeholder="Your area or city…"
+                  value={locationQuery}
+                  onChange={e => setLocationQuery(e.target.value)}
                   className="flex-1 bg-transparent text-sm text-[#0F172A] placeholder-[#64748B] outline-none"
                   aria-label="Enter your location"
                 />
               </div>
               <button
-                className="flex items-center justify-center gap-2 bg-[#EA580C] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#C2410C] active:scale-95 transition-all cursor-pointer shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EA580C]"
+                onClick={fetchProviders}
+                className="flex items-center justify-center gap-2 bg-[#EA580C] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#C2410C] active:scale-95 transition-all cursor-pointer shadow-sm"
                 aria-label="Search for kitchens"
               >
                 <Search size={18} aria-hidden="true" />
@@ -99,8 +142,6 @@ export default function HomePage() {
             <h2 id="kitchens-heading" className="font-heading font-bold text-2xl sm:text-3xl text-[#0F172A]">
               Kitchens near you
             </h2>
-
-            {/* Search filter */}
             <div className="flex items-center gap-2 bg-white border border-[#FCEAE1] rounded-xl px-3 py-2 w-full sm:w-64 focus-within:border-[#EA580C] focus-within:ring-2 focus-within:ring-[#EA580C]/20 transition-all">
               <Search size={15} className="text-[#64748B] shrink-0" aria-hidden="true" />
               <input
@@ -109,7 +150,7 @@ export default function HomePage() {
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Filter kitchens…"
                 className="flex-1 bg-transparent text-sm text-[#0F172A] placeholder-[#64748B] outline-none"
-                aria-label="Filter kitchens by name or location"
+                aria-label="Filter kitchens"
               />
             </div>
           </div>
@@ -136,20 +177,33 @@ export default function HomePage() {
             ))}
           </div>
 
+          {/* Error state */}
+          {error && (
+            <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-6" role="alert">
+              <AlertCircle size={18} className="text-red-500 shrink-0" />
+              <p className="text-sm text-red-700">{error}</p>
+              <button onClick={fetchProviders} className="ml-auto text-sm font-semibold text-red-600 hover:underline cursor-pointer">Retry</button>
+            </div>
+          )}
+
           {/* Grid */}
-          {filteredProviders.length > 0 ? (
+          {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProviders.map(provider => (
+              {[...Array(6)].map((_, i) => <ProviderSkeleton key={i} />)}
+            </div>
+          ) : providerList.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {providerList.map(provider => (
                 <ProviderCard key={provider.id} provider={provider} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-16" role="status" aria-live="polite">
+            <div className="text-center py-16" role="status">
               <div className="w-16 h-16 bg-[#FDF4F0] rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Search size={28} className="text-[#EA580C]" aria-hidden="true" />
               </div>
               <p className="font-heading font-bold text-xl text-[#0F172A] mb-2">No kitchens found</p>
-              <p className="text-[#64748B] text-sm">Try a different search or category filter.</p>
+              <p className="text-[#64748B] text-sm">Try a different search or be the first to list your kitchen!</p>
             </div>
           )}
         </section>
@@ -167,18 +221,18 @@ export default function HomePage() {
               Cook from home. Earn every day.
             </h2>
             <p className="text-white/80 text-base sm:text-lg mb-8 leading-relaxed">
-              Join 500+ home cooks already earning on Mom's Magic. No setup cost — list your kitchen for free and start getting orders today.
+              Join home cooks already earning on Mom's Magic. No setup cost — list your kitchen for free and start getting orders today.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
-                href="/provider/register"
-                className="inline-flex items-center justify-center gap-2 bg-white text-[#EA580C] font-bold text-sm px-8 py-3.5 rounded-xl hover:bg-orange-50 active:scale-95 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                href="/register?role=provider"
+                className="inline-flex items-center justify-center gap-2 bg-white text-[#EA580C] font-bold text-sm px-8 py-3.5 rounded-xl hover:bg-orange-50 active:scale-95 transition-all cursor-pointer"
               >
                 <ChefHat size={18} aria-hidden="true" />
                 List your kitchen — it's free
               </a>
               <a
-                href="/how-it-works"
+                href="#how-it-works"
                 className="inline-flex items-center justify-center gap-2 border-2 border-white/60 text-white font-semibold text-sm px-8 py-3.5 rounded-xl hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
               >
                 Learn how it works
