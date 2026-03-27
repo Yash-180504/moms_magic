@@ -23,11 +23,20 @@
 
   body {
     margin: 0;
-    min-height: 100vh;
+    min-height: 100dvh;
+    /* leave room for mobile bottom nav (56px) */
+    padding-bottom: 56px;
+  }
+
+  /* Remove body bottom padding on desktop where BottomNav is hidden */
+  @media (min-width: 768px) {
+    body {
+      padding-bottom: 0;
+    }
   }
 
   #root {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
   }
@@ -60,5 +69,18 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+  }
+
+  /* Suppress 300ms tap delay everywhere */
+  * {
+    touch-action: manipulation;
+  }
+
+  /* Hide scrollbar but keep scroll */
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }

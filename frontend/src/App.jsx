@@ -1,12 +1,15 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import BottomNav from './components/BottomNav'
+import InstallBanner from './components/InstallBanner'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProviderDetailPage from './pages/ProviderDetailPage'
 import ProviderDashboard from './pages/ProviderDashboard'
 import OrdersPage from './pages/OrdersPage'
+import ProfilePage from './pages/ProfilePage'
 
 function App() {
   return (
@@ -14,10 +17,10 @@ function App() {
       <Router>
         <Routes>
           {/* Public */}
-          <Route path="/"               element={<HomePage />} />
-          <Route path="/login"          element={<LoginPage />} />
-          <Route path="/register"       element={<RegisterPage />} />
-          <Route path="/provider/:id"   element={<ProviderDetailPage />} />
+          <Route path="/"             element={<HomePage />} />
+          <Route path="/login"        element={<LoginPage />} />
+          <Route path="/register"     element={<RegisterPage />} />
+          <Route path="/provider/:id" element={<ProviderDetailPage />} />
 
           {/* Customer-only */}
           <Route
@@ -29,6 +32,9 @@ function App() {
             }
           />
 
+          {/* Profile — public route, shows login prompt if not signed in */}
+          <Route path="/profile" element={<ProfilePage />} />
+
           {/* Provider-only */}
           <Route
             path="/dashboard"
@@ -39,6 +45,10 @@ function App() {
             }
           />
         </Routes>
+
+        {/* Global mobile UI */}
+        <BottomNav />
+        <InstallBanner />
       </Router>
     </AuthProvider>
   )
