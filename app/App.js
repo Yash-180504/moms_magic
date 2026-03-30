@@ -1,10 +1,9 @@
 import React, { useEffect } from "react";
-import "./global.css";
 import * as SplashScreen from "expo-splash-screen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "./src/context/AuthContext";
 import { DataProvider } from "./src/context/DataContext";
-import { AppNavigator } from "./src/navigation/AppNavigator";
+import { AppNavigator } from "./src/navigation/AppNavigatorSimple";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -21,7 +20,7 @@ export default function App() {
   }, []);
 
   return (
-    <GestureHandlerRootView className="flex-1">
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
         <DataProvider>
           <AppNavigator />
