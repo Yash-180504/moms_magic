@@ -16,20 +16,26 @@ const PORT = process.env.PORT || 3000;
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow any localhost origin during development
+      // Allow localhost origins during development
       if (
         !origin ||
         origin.startsWith("http://localhost") ||
         origin.startsWith("http://127.0.0.1")
       ) {
         callback(null, true);
+        return;
+      }
+
+      // Production: allow Vercel frontend and env FRONTEND_URL
+      const allowedOrigins = [
+        "https://moms-magic.vercel.app",
+        process.env.FRONTEND_URL,
+      ].filter(Boolean);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
       } else {
-        // Use FRONTEND_URL for production
-        const allowed = process.env.FRONTEND_URL || "http://localhost:5173";
-        callback(
-          origin === allowed ? null : new Error("Not allowed by CORS"),
-          origin === allowed,
-        );
+        callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
