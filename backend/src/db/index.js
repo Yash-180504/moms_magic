@@ -120,68 +120,28 @@ export const query = (text, params = []) => {
     try {
       let rows = [];
 
-      // Handle providers list query (with user JOIN and filters)
-      if (text.includes("SELECT") && text.includes("FROM providers")) {
-        rows = db.providers
-          .filter((p) => p.is_active === true)
-          .map((provider) => {
-            const user = db.users.find((u) => u.id === provider.user_id);
-            return {
-              ...provider,
-              owner_name: user?.name || "Unknown",
-              owner_email: user?.email || "",
-            };
-          });
+      // Handle providers list query
+      if (text.includes("FROM providers")) {
+        // Always map providers with user data
+        rows = db.providers.map((provider) => {
+          const user = db.users.find((u) => u.id === provider.user_id);
+          return {
+            ...provider,
+            owner_name: user?.name || "Unknown",
+            owner_email: user?.email || "",
+          };
+        });
 
-        // Apply WHERE filters if present in SQL
-        if (text.includes("WHERE")) {
-          // Check veg filter
-          if (text.includes("is_veg = TRUE")) {
-            rows = rows.filter((r) => r.is_veg === true);
-          }
-          // Check nonveg filter
-          if (text.includes("is_nonveg = TRUE")) {
-            rows = rows.filter((r) => r.is_nonveg === true);
-          }
-          // Check city filter (ILIKE means case-insensitive)
-          if (text.includes("ILIKE")) {
-            const cityMatch = params[0]?.replace(/%/g, "") || "";
-            const kitchenMatch = params[1]?.replace(/%/g, "") || "";
-            const searchMatch = params[params.length - 1]?.replace(/%/g, "") || "";
-
-            if (cityMatch && text.includes("p.city ILIKE")) {
-              rows = rows.filter((r) =>
-                r.city?.toLowerCase().includes(cityMatch.toLowerCase())
-              );
-            }
-            if (kitchenMatch || searchMatch) {
-              rows = rows.filter((r) => {
-                const search = kitchenMatch || searchMatch;
-                return (
-                  r.kitchen_name
-                    ?.toLowerCase()
-                    .includes(search.toLowerCase()) ||
-                  r.location?.toLowerCase().includes(search.toLowerCase()) ||
-                  r.description?.toLowerCase().includes(search.toLowerCase())
-                );
-              });
-            }
-          }
-        }
-
-        // Apply sorting if present
-        if (text.includes("ORDER BY")) {
-          rows.sort((a, b) => {
-            // Sort by rating DESC, then total_orders DESC
-            if (b.rating !== a.rating) return b.rating - a.rating;
-            return b.total_orders - a.total_orders;
-          });
-        }
-      } else if (text.includes("SELECT") && text.includes("FROM users")) {
+        // Sort by rating and total_orders
+        rows.sort((a, b) => {
+          if (b.rating !== a.rating) return b.rating - a.rating;
+          return b.total_orders - a.total_orders;
+        });
+      } else if (text.includes("FROM users")) {
         rows = db.users;
-      } else if (text.includes("SELECT") && text.includes("FROM menu_items")) {
+      } else if (text.includes("FROM menu_items")) {
         rows = db.menu;
-      } else if (text.includes("SELECT") && text.includes("FROM orders")) {
+      } else if (text.includes("FROM orders")) {
         rows = db.orders;
       }
       // Handle INSERT queries
@@ -195,8 +155,11 @@ export const query = (text, params = []) => {
 
       resolve({ rows, rowCount: rows.length });
     } catch (err) {
+      console.error("Mock DB Error:", err, "SQL:", text);
       reject(err);
     }
+  });
+};
   });
 };
 
