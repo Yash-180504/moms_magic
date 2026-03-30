@@ -2,7 +2,7 @@
 
 > A full-stack marketplace connecting home cooks with people who crave a taste of home — digitizing the informal tiffin/mess service industry one meal at a time.
 
----
+
 
 ## Table of Contents
 
@@ -396,7 +396,6 @@ FRONTEND_URL=http://localhost:5174
 VITE_API_URL=http://localhost:3000
 VITE_WS_URL=ws://localhost:3000
 ```
-
 ---
 
 ## Why Mom's Magic?
