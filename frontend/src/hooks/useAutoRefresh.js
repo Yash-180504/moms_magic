@@ -1,13 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const defaultWsProtocol =
-  typeof window !== "undefined" && window.location.protocol === "https:"
-    ? "wss:"
-    : "ws:";
-const defaultWsHost =
-  typeof window !== "undefined" ? window.location.host : "localhost:3000";
-const WS_URL =
-  import.meta.env.VITE_WS_URL || `${defaultWsProtocol}//${defaultWsHost}`;
+const WS_URL = 'wss://momsmagic-production.up.railway.app';
 
 /**
  * Connects to the backend WebSocket and calls `onRefresh` every time
