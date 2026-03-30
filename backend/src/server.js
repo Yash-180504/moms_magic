@@ -26,15 +26,16 @@ app.use(
         return;
       }
 
-      // Production: allow Vercel frontend and env FRONTEND_URL
-      const allowedOrigins = [
-        "https://moms-magic.vercel.app",
-        process.env.FRONTEND_URL,
-      ].filter(Boolean);
+      // Production: allow Vercel frontend domains (production + preview + staging)
+      const isVercelDomain = origin && (
+        origin.includes(".vercel.app") ||
+        origin === process.env.FRONTEND_URL
+      );
 
-      if (allowedOrigins.includes(origin)) {
+      if (isVercelDomain) {
         callback(null, true);
       } else {
+        console.warn(`[CORS] Rejected origin: ${origin}`);
         callback(new Error("Not allowed by CORS"));
       }
     },
