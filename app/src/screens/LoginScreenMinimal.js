@@ -4,8 +4,6 @@ import {
   Text,
   TextInput,
   Pressable,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   ActivityIndicator,
   StyleSheet,
@@ -159,15 +157,9 @@ export default function LoginScreenSimple({ navigation }) {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <StatusBar style="dark" />
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.logoContainer}>
           <View style={styles.logoBox}>
             <ChefHat color="white" size={32} />
@@ -191,8 +183,6 @@ export default function LoginScreenSimple({ navigation }) {
             placeholder="your@email.com"
             placeholderTextColor="#94A3B8"
             keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
           />
         </View>
 
@@ -204,8 +194,6 @@ export default function LoginScreenSimple({ navigation }) {
             onChangeText={setPassword}
             placeholder="••••••••"
             placeholderTextColor="#94A3B8"
-            autoCapitalize="none"
-            autoCorrect={false}
           />
         </View>
 
@@ -233,6 +221,6 @@ export default function LoginScreenSimple({ navigation }) {
           <Text style={styles.demoText}>Password: password123</Text>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
