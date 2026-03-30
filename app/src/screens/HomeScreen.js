@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,14 +7,14 @@ import {
   Pressable,
   Image,
   ActivityIndicator,
-} from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { Search, Star, ChefHat } from 'lucide-react-native';
-import { useData } from '../context/DataContext';
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { Search, Star, ChefHat } from "lucide-react-native";
+import { useData } from "../context/DataContext";
 
 export default function HomeScreen({ navigation }) {
   const { providers, loading, error, isConnected } = useData();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [filteredProviders, setFilteredProviders] = useState([]);
 
   useEffect(() => {
@@ -40,8 +40,12 @@ export default function HomeScreen({ navigation }) {
             <ChefHat color="white" size={22} />
           </View>
           <View>
-            <Text className="text-slate-500 text-xs">Home-cooked. Delivered daily.</Text>
-            <Text className="text-slate-900 text-2xl font-bold">Moms Magic</Text>
+            <Text className="text-slate-500 text-xs">
+              Home-cooked. Delivered daily.
+            </Text>
+            <Text className="text-slate-900 text-2xl font-bold">
+              Moms Magic
+            </Text>
           </View>
         </View>
 
@@ -64,7 +68,9 @@ export default function HomeScreen({ navigation }) {
         {/* Connection Status */}
         {!isConnected && (
           <View className="mt-3 bg-yellow-100 border border-yellow-300 rounded-lg px-3 py-2">
-            <Text className="text-yellow-900 text-xs">⚠ Sync disconnected - pull to refresh</Text>
+            <Text className="text-yellow-900 text-xs">
+              ⚠ Sync disconnected - pull to refresh
+            </Text>
           </View>
         )}
       </View>
@@ -78,32 +84,38 @@ export default function HomeScreen({ navigation }) {
       ) : error ? (
         <View className="p-5">
           <View className="bg-red-100 border border-red-300 rounded-lg p-4">
-            <Text className="text-red-900 font-semibold">Error loading kitchens</Text>
+            <Text className="text-red-900 font-semibold">
+              Error loading kitchens
+            </Text>
             <Text className="text-red-800 text-sm mt-1">{error}</Text>
           </View>
         </View>
       ) : filteredProviders.length === 0 ? (
         <View className="p-5">
           <Text className="text-slate-600 text-center">
-            {searchQuery ? 'No kitchens match your search' : 'No kitchens available'}
+            {searchQuery
+              ? "No kitchens match your search"
+              : "No kitchens available"}
           </Text>
         </View>
       ) : (
         <View className="px-5 py-4">
           <Text className="text-slate-900 text-lg font-bold mb-3">
-            {filteredProviders.length} Kitchen{filteredProviders.length !== 1 ? 's' : ''} Available
+            {filteredProviders.length} Kitchen
+            {filteredProviders.length !== 1 ? "s" : ""} Available
           </Text>
 
           {filteredProviders.map((provider) => (
             <Pressable
               key={provider.id}
               onPress={() =>
-                navigation.navigate('ProviderDetail', {
+                navigation.navigate("ProviderDetail", {
                   providerId: provider.id,
                   providerName: provider.name,
                 })
               }
-              className="bg-white rounded-2xl p-4 mb-4 border border-slate-200">
+              className="bg-white rounded-2xl p-4 mb-4 border border-slate-200"
+            >
               <View className="flex-row gap-3">
                 {provider.image && (
                   <Image
@@ -112,10 +124,16 @@ export default function HomeScreen({ navigation }) {
                   />
                 )}
                 <View className="flex-1">
-                  <Text className="text-slate-900 font-bold text-base">{provider.name}</Text>
-                  <Text className="text-slate-600 text-xs mt-1">{provider.location}</Text>
+                  <Text className="text-slate-900 font-bold text-base">
+                    {provider.name}
+                  </Text>
+                  <Text className="text-slate-600 text-xs mt-1">
+                    {provider.location}
+                  </Text>
                   {provider.specialty && (
-                    <Text className="text-slate-600 text-xs mt-1">• {provider.specialty}</Text>
+                    <Text className="text-slate-600 text-xs mt-1">
+                      • {provider.specialty}
+                    </Text>
                   )}
 
                   {/* Rating */}
@@ -124,7 +142,9 @@ export default function HomeScreen({ navigation }) {
                     <Text className="text-slate-900 font-semibold text-sm">
                       {provider.rating || 4.5}
                     </Text>
-                    <Text className="text-slate-600 text-xs">({provider.reviews || 0} reviews)</Text>
+                    <Text className="text-slate-600 text-xs">
+                      ({provider.reviews || 0} reviews)
+                    </Text>
                   </View>
                 </View>
               </View>

@@ -1,6 +1,12 @@
-import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
-import { api } from '../lib/api';
-import { useSyncProvider } from '../hooks/useSyncProvider';
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useCallback,
+  useContext,
+} from "react";
+import { api } from "../lib/api";
+import { useSyncProvider } from "../hooks/useSyncProvider";
 
 export const DataContext = createContext();
 
@@ -12,7 +18,7 @@ export function DataProvider({ children }) {
 
   // WebSocket sync
   const handleUpdate = useCallback((message) => {
-    if (message.type === 'refresh' || message.type === 'update') {
+    if (message.type === "refresh" || message.type === "update") {
       // Refresh providers when notified
       fetchProviders();
     }
@@ -26,7 +32,7 @@ export function DataProvider({ children }) {
       setProviders(res.providers || []);
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch providers:', err);
+      console.error("Failed to fetch providers:", err);
       setError(err.message);
     }
   }, []);
@@ -36,7 +42,7 @@ export function DataProvider({ children }) {
       const res = await api.orders.list();
       setOrders(res.orders || []);
     } catch (err) {
-      console.error('Failed to fetch orders:', err);
+      console.error("Failed to fetch orders:", err);
     }
   }, []);
 
@@ -46,7 +52,7 @@ export function DataProvider({ children }) {
       setOrders((prev) => [...prev, res.order]);
       return res.order;
     } catch (err) {
-      console.error('Failed to create order:', err);
+      console.error("Failed to create order:", err);
       throw err;
     }
   }, []);
@@ -91,7 +97,7 @@ export function DataProvider({ children }) {
 export function useData() {
   const context = useContext(DataContext);
   if (!context) {
-    throw new Error('useData must be used within DataProvider');
+    throw new Error("useData must be used within DataProvider");
   }
   return context;
 }

@@ -11,7 +11,7 @@ A React Native mobile application for Moms Magic - connecting customers with hom
 ✅ **Order Tracking** - Real-time order status updates  
 ✅ **User Profile** - Account management and order history  
 ✅ **Offline Support** - AsyncStorage for persistent data  
-✅ **Cross-platform** - iOS, Android, and Web support  
+✅ **Cross-platform** - iOS, Android, and Web support
 
 ## Tech Stack
 
@@ -70,6 +70,7 @@ app/
 ### Installation
 
 1. **Install dependencies**:
+
 ```bash
 cd app
 npm install
@@ -86,27 +87,32 @@ npm install
 ### Running the App
 
 **Development mode**:
+
 ```bash
 npm start
 ```
 
 Then choose:
+
 - `i` - iOS Simulator
 - `a` - Android Emulator
 - `w` - Web browser
 - `e` - Expo Go app (scan QR code on phone)
 
 **iOS**:
+
 ```bash
 npm run ios
 ```
 
 **Android**:
+
 ```bash
 npm run android
 ```
 
 **Web** (testing):
+
 ```bash
 npm run web
 ```
@@ -168,14 +174,18 @@ AppNavigator decides:
 ## Key Components
 
 ### 1. AuthContext
+
 Manages user authentication state and provides methods:
+
 - `login(email, password)` - Sign in existing user
 - `register(email, password, name, role)` - Create new account
 - `logout()` - Sign out and clear token
 - `isAuthenticated` - Boolean flag for rendering
 
 ### 2. DataContext
+
 Manages shared application data:
+
 - `providers` - Array of home cooks
 - `orders` - User's order history
 - `fetchProviders()` - Refresh provider list
@@ -184,7 +194,9 @@ Manages shared application data:
 - `isConnected` - WebSocket connection status
 
 ### 3. API Client
+
 RESTful API wrapper with automatic JWT auth:
+
 - `api.auth.login(email, password)`
 - `api.auth.register(email, password, name, role)`
 - `api.auth.logout()`
@@ -195,7 +207,9 @@ RESTful API wrapper with automatic JWT auth:
 - `api.orders.list()`
 
 ### 4. WebSocket Hook
+
 Real-time synchronization:
+
 - Connects to backend WebSocket
 - Auto-reconnect with exponential backoff
 - Triggers data refresh on server broadcasts
@@ -211,23 +225,27 @@ Password: password123
 ## Features Implementation
 
 ### Real-time Updates
+
 - WebSocket connection in DataContext
 - Auto-refresh every 5 seconds when connected
 - Triggered on server broadcasts
 - Syncs across web and mobile simultaneously
 
 ### Search & Filter
+
 - HomeScreen filters providers by name, location, specialty
 - Real-time as user types
 - Works with live data from backend
 
 ### Authentication
+
 - JWT tokens stored in AsyncStorage
 - Automatic token inclusion in all API requests
 - Persistent login across app restarts
 - Session validation on app start
 
 ### Order Management
+
 - Browse provider menus
 - Add/remove items from cart
 - Calculate totals with tax/delivery
@@ -237,21 +255,25 @@ Password: password123
 ## Troubleshooting
 
 ### App Won't Start
+
 1. Clear metro bundler cache: `expo start --clear`
 2. Delete node_modules: `rm -rf node_modules && npm install`
 3. Check if port 19000 is available
 
 ### WebSocket Connection Fails
+
 1. Verify backend is running (check Railway deployment)
 2. Ensure wss:// protocol for HTTPS (automatic in useSyncProvider)
 3. Check browser/app console for connection errors
 
 ### Authentication Fails
+
 1. Verify backend `/auth/login` endpoint is working
 2. Check email/password credentials
 3. Ensure JWT is being returned by backend
 
 ### Data Not Syncing
+
 1. Check DataContext initialization in App.js
 2. Verify WebSocket connection status
 3. Test API endpoint directly with curl
@@ -261,6 +283,7 @@ Password: password123
 The mobile app expects the following backend structure:
 
 **Endpoints**:
+
 - `POST /auth/login` - Login with email/password
 - `POST /auth/register` - Register new user
 - `GET /auth/me` - Get current user
@@ -272,6 +295,7 @@ The mobile app expects the following backend structure:
 - `GET /orders/:id` - Get order details
 
 **WebSocket**:
+
 - Message format: `{ type: 'refresh' | 'update', data?: any }`
 - Auto-refresh triggered on type: 'refresh'
 
@@ -286,18 +310,21 @@ The mobile app expects the following backend structure:
 ## Deployment
 
 ### Expo Go (Testing)
+
 ```bash
 npm start
 # Scan QR code with Expo Go app
 ```
 
 ### EAS Build (Production)
+
 ```bash
 eas build --platform ios
 eas build --platform android
 ```
 
 ### EAS Submit (App Stores)
+
 ```bash
 eas submit --platform ios
 eas submit --platform android
@@ -335,6 +362,7 @@ See [Expo EAS documentation](https://docs.expo.dev/eas/) for details.
 ## Support
 
 For issues or questions:
+
 1. Check troubleshooting section
 2. Review console logs
 3. Test on multiple devices

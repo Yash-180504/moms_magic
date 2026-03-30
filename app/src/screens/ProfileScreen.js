@@ -1,8 +1,14 @@
-import React, { useContext } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { User, LogOut, Mail, Settings } from 'lucide-react-native';
-import { AuthContext } from '../context/AuthContext';
+import React, { useContext } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { User, LogOut, Mail, Settings } from "lucide-react-native";
+import { AuthContext } from "../context/AuthContext";
 
 export default function ProfileScreen() {
   const { user, logout, loading } = useContext(AuthContext);
@@ -23,7 +29,9 @@ export default function ProfileScreen() {
           </View>
           <View>
             <Text className="text-slate-900 text-2xl font-bold">Profile</Text>
-            <Text className="text-slate-600 text-xs mt-1">Manage your account</Text>
+            <Text className="text-slate-600 text-xs mt-1">
+              Manage your account
+            </Text>
           </View>
         </View>
       </View>
@@ -43,14 +51,22 @@ export default function ProfileScreen() {
                     {user?.name?.charAt(0).toUpperCase()}
                   </Text>
                 </View>
-                <Text className="text-slate-900 text-2xl font-bold text-center">{user?.name}</Text>
-                <Text className="text-slate-600 text-sm mt-2">{user?.email}</Text>
+                <Text className="text-slate-900 text-2xl font-bold text-center">
+                  {user?.name}
+                </Text>
+                <Text className="text-slate-600 text-sm mt-2">
+                  {user?.email}
+                </Text>
               </View>
 
               {user?.role && (
                 <View className="bg-orange-50 rounded-lg p-3 mb-4">
-                  <Text className="text-slate-600 text-xs mb-1">Account Type</Text>
-                  <Text className="text-slate-900 font-semibold capitalize">{user.role}</Text>
+                  <Text className="text-slate-600 text-xs mb-1">
+                    Account Type
+                  </Text>
+                  <Text className="text-slate-900 font-semibold capitalize">
+                    {user.role}
+                  </Text>
                 </View>
               )}
             </View>
@@ -60,7 +76,9 @@ export default function ProfileScreen() {
               <Pressable className="bg-white rounded-lg p-4 flex-row items-center justify-between border border-slate-200">
                 <View className="flex-row items-center gap-3">
                   <Mail size={20} color="#EA580C" />
-                  <Text className="text-slate-900 font-semibold">Edit Email</Text>
+                  <Text className="text-slate-900 font-semibold">
+                    Edit Email
+                  </Text>
                 </View>
                 <Text className="text-slate-400">›</Text>
               </Pressable>
@@ -68,7 +86,9 @@ export default function ProfileScreen() {
               <Pressable className="bg-white rounded-lg p-4 flex-row items-center justify-between border border-slate-200">
                 <View className="flex-row items-center gap-3">
                   <Settings size={20} color="#EA580C" />
-                  <Text className="text-slate-900 font-semibold">Account Settings</Text>
+                  <Text className="text-slate-900 font-semibold">
+                    Account Settings
+                  </Text>
                 </View>
                 <Text className="text-slate-400">›</Text>
               </Pressable>
@@ -79,14 +99,17 @@ export default function ProfileScreen() {
               onPress={handleLogout}
               disabled={loading}
               className={`mt-6 ${
-                loading ? 'bg-red-400' : 'bg-red-600'
-              } rounded-lg py-3 flex-row items-center justify-center gap-2`}>
+                loading ? "bg-red-400" : "bg-red-600"
+              } rounded-lg py-3 flex-row items-center justify-center gap-2`}
+            >
               {loading ? (
                 <ActivityIndicator color="white" />
               ) : (
                 <>
                   <LogOut size={20} color="white" />
-                  <Text className="text-white font-bold text-base">Sign Out</Text>
+                  <Text className="text-white font-bold text-base">
+                    Sign Out
+                  </Text>
                 </>
               )}
             </Pressable>
@@ -95,10 +118,13 @@ export default function ProfileScreen() {
           {/* Info Section */}
           <View className="px-5 pb-10">
             <View className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <Text className="text-blue-900 font-semibold text-sm mb-2">About This App</Text>
+              <Text className="text-blue-900 font-semibold text-sm mb-2">
+                About This App
+              </Text>
               <Text className="text-blue-800 text-xs leading-5">
-                Moms Magic connects you with verified home cooks for fresh, home-cooked meals
-                delivered daily. Quality, trust, and care in every meal.
+                Moms Magic connects you with verified home cooks for fresh,
+                home-cooked meals delivered daily. Quality, trust, and care in
+                every meal.
               </Text>
             </View>
           </View>

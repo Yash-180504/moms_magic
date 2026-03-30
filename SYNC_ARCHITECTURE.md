@@ -64,53 +64,64 @@ This document explains how the Moms Magic web and mobile apps stay perfectly syn
 ## Sync Mechanisms
 
 ### 1. REST API (Request-Response)
+
 Regular HTTP/HTTPS calls for data operations:
 
 **Web App** → `api.js` → `fetch()` → Backend `/providers` → Response
+
 ```javascript
 // Web
-const res = await fetch('https://momsmagic-production.up.railway.app/api/providers')
-const { providers } = await res.json()
+const res = await fetch(
+  "https://momsmagic-production.up.railway.app/api/providers",
+);
+const { providers } = await res.json();
 ```
 
 **Mobile App** → `api.js` → `fetch()` → Backend `/providers` → Response
+
 ```javascript
 // Mobile
-const res = await fetch('https://momsmagic-production.up.railway.app/api/providers')
-const { providers } = await res.json()
+const res = await fetch(
+  "https://momsmagic-production.up.railway.app/api/providers",
+);
+const { providers } = await res.json();
 ```
 
 ### 2. WebSocket (Broadcast)
+
 Real-time push notifications from backend:
 
 **Backend broadcasting** every 2 seconds:
+
 ```javascript
 // server.js
 setInterval(() => {
-  server.broadcast(JSON.stringify({ type: 'refresh', timestamp: Date.now() }))
-}, 2000)
+  server.broadcast(JSON.stringify({ type: "refresh", timestamp: Date.now() }));
+}, 2000);
 ```
 
 **Web App listening**:
+
 ```javascript
 // useAutoRefresh.js
 ws.onmessage = (event) => {
-  const msg = JSON.parse(event.data)
-  if (msg.type === 'refresh') {
-    fetchProviders() // Re-fetch latest data
+  const msg = JSON.parse(event.data);
+  if (msg.type === "refresh") {
+    fetchProviders(); // Re-fetch latest data
   }
-}
+};
 ```
 
 **Mobile App listening**:
+
 ```javascript
 // useSyncProvider.js
 ws.onmessage = (event) => {
-  const msg = JSON.parse(event.data)
-  if (msg.type === 'refresh') {
-    onUpdate(msg) // Trigger DataContext update
+  const msg = JSON.parse(event.data);
+  if (msg.type === "refresh") {
+    onUpdate(msg); // Trigger DataContext update
   }
-}
+};
 ```
 
 ## Real-time Sync Example
@@ -118,32 +129,34 @@ ws.onmessage = (event) => {
 ### Scenario: Kitchen owner adds new menu item
 
 **Timeline**:
+
 ```
 T0:00 - Kitchen owner adds "Biryani" on mobile app
           POST /menu → Backend stores new item
-          
+
 T0:02 - Backend broadcasts 'refresh' event via WebSocket
           ├─ Web browser receives message
           ├─ Mobile app receives message
           └─ Both apps fetch fresh data
-          
+
 T0:03 - Web app calls GET /providers
           ├─ Receives updated menu with Biryani
           ├─ useState updates with new data
           └─ HomePage re-renders → Biryani visible
-          
+
 T0:03 - Mobile app calls GET /providers
           ├─ Receives updated menu with Biryani
           ├─ DataContext updates state
           ├─ HomeScreen re-renders
           └─ Biryani visible on mobile
-          
+
 T0:04 - Customer sees Biryani on BOTH web and mobile simultaneously
 ```
 
 ## State Management Comparison
 
 ### Web App (React/Vite)
+
 ```
 HomePpage (useState)
     ↓
@@ -158,6 +171,7 @@ Re-render component
 ```
 
 ### Mobile App (React Native)
+
 ```
 HomeScreen (useData hook)
     ↓
@@ -248,59 +262,69 @@ Authorization: `Bearer ${token}`
 ## Sync Reliability Features
 
 ### 1. Auto-reconnect on WebSocket disconnect
+
 ```javascript
 // useSyncProvider.js
 ws.onclose = () => {
-  setTimeout(connect, 3000) // Retry after 3 seconds
-}
+  setTimeout(connect, 3000); // Retry after 3 seconds
+};
 ```
 
 ### 2. Fallback polling
+
 ```javascript
 // DataContext.js
 useEffect(() => {
-  const interval = setInterval(fetchProviders, 5000)
-  return () => clearInterval(interval)
-}, [isConnected])
+  const interval = setInterval(fetchProviders, 5000);
+  return () => clearInterval(interval);
+}, [isConnected]);
 ```
 
 ### 3. Error handling
+
 ```javascript
 // Both apps handle errors gracefully
 try {
-  const res = await api.providers.list()
-  setProviders(res.providers)
+  const res = await api.providers.list();
+  setProviders(res.providers);
 } catch (err) {
-  setError(err.message)
-  showNotification('Failed to load providers')
+  setError(err.message);
+  showNotification("Failed to load providers");
 }
 ```
 
 ## Connection Status Indicators
 
 ### Web App
+
 ```javascript
 // Frontend shows sync status
-{isConnected ? (
-  <div>✅ Syncing live</div>
-) : (
-  <div className="yellow">⚠ Sync paused - pull to refresh</div>
-)}
+{
+  isConnected ? (
+    <div>✅ Syncing live</div>
+  ) : (
+    <div className="yellow">⚠ Sync paused - pull to refresh</div>
+  );
+}
 ```
 
 ### Mobile App
+
 ```javascript
 // Mobile shows sync status
-{!isConnected && (
-  <View className="bg-yellow-100">
-    <Text>⚠ Sync disconnected - pull to refresh</Text>
-  </View>
-)}
+{
+  !isConnected && (
+    <View className="bg-yellow-100">
+      <Text>⚠ Sync disconnected - pull to refresh</Text>
+    </View>
+  );
+}
 ```
 
 ## Testing Sync
 
 ### 1. Open web and mobile side-by-side
+
 ```bash
 # Terminal 1: Start web app
 cd frontend && npm run dev
@@ -311,16 +335,19 @@ cd app && npm start
 ```
 
 ### 2. Make a change on web, verify on mobile
+
 - Add item to cart on web
 - Should reflect on mobile in <2 seconds via WebSocket
 
 ### 3. Test WebSocket reconnect
+
 - Disconnect phone from WiFi
 - Wait 3 seconds
 - Reconnect
 - App auto-syncs
 
 ### 4. Test offline fallback
+
 - Stop backend server
 - Apps enter offline mode
 - Show cached data
@@ -340,19 +367,22 @@ The sync system is optimized for low bandwidth:
 ### Symptoms: Web and mobile show different data
 
 **Cause 1**: WebSocket disconnected
+
 ```bash
 # Check backend is running
 curl -v wss://momsmagic-production.up.railway.app
 ```
 
 **Cause 2**: API calls failing silently
+
 ```javascript
 // Enable console logging
-console.log('Sync triggered')
-console.log('Response:', res)
+console.log("Sync triggered");
+console.log("Response:", res);
 ```
 
 **Cause 3**: State not updating
+
 ```javascript
 // Verify React/React Native hooks are properly set up
 // Check useEffect dependencies
@@ -363,6 +393,7 @@ console.log('Response:', res)
 **Expected**: 2-5 seconds (WebSocket broadcast + API fetch + setState + render)
 
 **If slower**: Check network latency
+
 ```bash
 # Measure backend response time
 time curl https://momsmagic-production.up.railway.app/api/providers

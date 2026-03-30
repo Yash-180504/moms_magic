@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,11 +7,11 @@ import {
   ActivityIndicator,
   Image,
   Alert,
-} from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { Star, Plus, Minus, ShoppingCart } from 'lucide-react-native';
-import { api } from '../lib/api';
-import { useData } from '../context/DataContext';
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { Star, Plus, Minus, ShoppingCart } from "lucide-react-native";
+import { api } from "../lib/api";
+import { useData } from "../context/DataContext";
 
 export default function ProviderDetailScreen({ route, navigation }) {
   const { providerId, providerName } = route.params;
@@ -33,8 +33,8 @@ export default function ProviderDetailScreen({ route, navigation }) {
         setProvider(provRes.provider);
         setMenu(menuRes.items || []);
       } catch (err) {
-        console.error('Failed to load provider:', err);
-        Alert.alert('Error', 'Failed to load provider details');
+        console.error("Failed to load provider:", err);
+        Alert.alert("Error", "Failed to load provider details");
       } finally {
         setLoading(false);
       }
@@ -53,12 +53,15 @@ export default function ProviderDetailScreen({ route, navigation }) {
   };
 
   const cartItems = menu.filter((item) => cart[item.id]);
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * cart[item.id], 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * cart[item.id],
+    0,
+  );
   const total = subtotal; // Add delivery charges if needed
 
   const handleOrder = async () => {
     if (cartItems.length === 0) {
-      Alert.alert('Empty Cart', 'Please add items to your order');
+      Alert.alert("Empty Cart", "Please add items to your order");
       return;
     }
 
@@ -71,12 +74,12 @@ export default function ProviderDetailScreen({ route, navigation }) {
         price: item.price,
       }));
 
-      await createOrder(items, 'User Address'); // TODO: Get delivery address from user
-      Alert.alert('Success', 'Order placed successfully!');
+      await createOrder(items, "User Address"); // TODO: Get delivery address from user
+      Alert.alert("Success", "Order placed successfully!");
       setCart({});
       navigation.goBack();
     } catch (err) {
-      Alert.alert('Error', err.message || 'Failed to place order');
+      Alert.alert("Error", err.message || "Failed to place order");
     } finally {
       setOrdering(false);
     }
@@ -101,14 +104,20 @@ export default function ProviderDetailScreen({ route, navigation }) {
             <Image source={{ uri: provider.image }} className="w-full h-48" />
           )}
           <View className="px-5 py-4">
-            <Text className="text-slate-900 text-2xl font-bold">{provider.name}</Text>
-            <Text className="text-slate-600 text-sm mt-1">{provider.location}</Text>
+            <Text className="text-slate-900 text-2xl font-bold">
+              {provider.name}
+            </Text>
+            <Text className="text-slate-600 text-sm mt-1">
+              {provider.location}
+            </Text>
 
             {/* Rating */}
             <View className="flex-row items-center gap-2 mt-3">
               <View className="flex-row items-center gap-1">
                 <Star size={16} color="#F59E0B" fill="#F59E0B" />
-                <Text className="text-slate-900 font-bold">{provider.rating || 4.5}</Text>
+                <Text className="text-slate-900 font-bold">
+                  {provider.rating || 4.5}
+                </Text>
               </View>
               <Text className="text-slate-600 text-sm">
                 ({provider.reviews || 0} reviews)
@@ -134,12 +143,17 @@ export default function ProviderDetailScreen({ route, navigation }) {
           menu.map((item) => (
             <View
               key={item.id}
-              className="bg-white rounded-xl p-4 mb-3 border border-slate-200">
+              className="bg-white rounded-xl p-4 mb-3 border border-slate-200"
+            >
               <View className="flex-row items-start justify-between mb-2">
                 <View className="flex-1">
                   <Text className="text-slate-900 font-bold">{item.name}</Text>
-                  <Text className="text-slate-600 text-sm mt-1">{item.description}</Text>
-                  <Text className="text-orange-600 font-bold mt-2">Rs {item.price}</Text>
+                  <Text className="text-slate-600 text-sm mt-1">
+                    {item.description}
+                  </Text>
+                  <Text className="text-orange-600 font-bold mt-2">
+                    Rs {item.price}
+                  </Text>
                 </View>
 
                 {/* Quantity Controls */}
@@ -147,20 +161,25 @@ export default function ProviderDetailScreen({ route, navigation }) {
                   <View className="bg-orange-600 rounded-lg flex-row items-center">
                     <Pressable
                       onPress={() => updateCart(item.id, cart[item.id] - 1)}
-                      className="p-2">
+                      className="p-2"
+                    >
                       <Minus size={16} color="white" />
                     </Pressable>
-                    <Text className="text-white font-bold px-2">{cart[item.id]}</Text>
+                    <Text className="text-white font-bold px-2">
+                      {cart[item.id]}
+                    </Text>
                     <Pressable
                       onPress={() => updateCart(item.id, cart[item.id] + 1)}
-                      className="p-2">
+                      className="p-2"
+                    >
                       <Plus size={16} color="white" />
                     </Pressable>
                   </View>
                 ) : (
                   <Pressable
                     onPress={() => updateCart(item.id, 1)}
-                    className="bg-orange-600 rounded-lg p-2">
+                    className="bg-orange-600 rounded-lg p-2"
+                  >
                     <Plus size={16} color="white" />
                   </Pressable>
                 )}
@@ -188,11 +207,15 @@ export default function ProviderDetailScreen({ route, navigation }) {
             <View className="border-t border-slate-200 pt-3 mt-3">
               <View className="flex-row justify-between mb-2">
                 <Text className="text-slate-600">Subtotal</Text>
-                <Text className="text-slate-900 font-semibold">Rs {subtotal}</Text>
+                <Text className="text-slate-900 font-semibold">
+                  Rs {subtotal}
+                </Text>
               </View>
               <View className="flex-row justify-between">
                 <Text className="text-slate-900 font-bold">Total</Text>
-                <Text className="text-orange-600 font-bold text-lg">Rs {total}</Text>
+                <Text className="text-orange-600 font-bold text-lg">
+                  Rs {total}
+                </Text>
               </View>
             </View>
 
@@ -201,8 +224,9 @@ export default function ProviderDetailScreen({ route, navigation }) {
               onPress={handleOrder}
               disabled={ordering}
               className={`mt-4 ${
-                ordering ? 'bg-orange-400' : 'bg-orange-600'
-              } rounded-lg py-3 flex-row items-center justify-center gap-2`}>
+                ordering ? "bg-orange-400" : "bg-orange-600"
+              } rounded-lg py-3 flex-row items-center justify-center gap-2`}
+            >
               {ordering ? (
                 <ActivityIndicator color="white" />
               ) : (

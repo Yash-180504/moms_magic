@@ -1,8 +1,14 @@
-import React, { useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { ShoppingBag, Clock } from 'lucide-react-native';
-import { useData } from '../context/DataContext';
+import React, { useEffect } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { ShoppingBag, Clock } from "lucide-react-native";
+import { useData } from "../context/DataContext";
 
 export default function OrdersScreen() {
   const { orders, loading, fetchOrders } = useData();
@@ -17,27 +23,27 @@ export default function OrdersScreen() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'delivered':
-        return 'bg-green-100';
-      case 'preparing':
-        return 'bg-blue-100';
-      case 'confirmed':
-        return 'bg-yellow-100';
+      case "delivered":
+        return "bg-green-100";
+      case "preparing":
+        return "bg-blue-100";
+      case "confirmed":
+        return "bg-yellow-100";
       default:
-        return 'bg-gray-100';
+        return "bg-gray-100";
     }
   };
 
   const getStatusTextColor = (status) => {
     switch (status) {
-      case 'delivered':
-        return 'text-green-900';
-      case 'preparing':
-        return 'text-blue-900';
-      case 'confirmed':
-        return 'text-yellow-900';
+      case "delivered":
+        return "text-green-900";
+      case "preparing":
+        return "text-blue-900";
+      case "confirmed":
+        return "text-yellow-900";
       default:
-        return 'text-gray-900';
+        return "text-gray-900";
     }
   };
 
@@ -52,8 +58,12 @@ export default function OrdersScreen() {
             <ShoppingBag color="white" size={22} />
           </View>
           <View>
-            <Text className="text-slate-900 text-2xl font-bold">Your Orders</Text>
-            <Text className="text-slate-600 text-xs mt-1">Track and manage your deliveries</Text>
+            <Text className="text-slate-900 text-2xl font-bold">
+              Your Orders
+            </Text>
+            <Text className="text-slate-600 text-xs mt-1">
+              Track and manage your deliveries
+            </Text>
           </View>
         </View>
       </View>
@@ -76,18 +86,27 @@ export default function OrdersScreen() {
           {orders.map((order) => (
             <View
               key={order.id}
-              className="bg-white rounded-2xl p-4 mb-4 border border-slate-200">
+              className="bg-white rounded-2xl p-4 mb-4 border border-slate-200"
+            >
               {/* Order Header */}
               <View className="flex-row justify-between items-start mb-3">
                 <View className="flex-1">
-                  <Text className="text-slate-900 font-bold">Order #{order.id?.slice(-6)}</Text>
+                  <Text className="text-slate-900 font-bold">
+                    Order #{order.id?.slice(-6)}
+                  </Text>
                   <View className="flex-row items-center gap-1 mt-1">
                     <Clock size={14} color="#64748B" />
-                    <Text className="text-slate-600 text-xs">{formatDate(order.createdAt)}</Text>
+                    <Text className="text-slate-600 text-xs">
+                      {formatDate(order.createdAt)}
+                    </Text>
                   </View>
                 </View>
-                <View className={`${getStatusColor(order.status)} rounded-lg px-3 py-1`}>
-                  <Text className={`${getStatusTextColor(order.status)} text-xs font-semibold capitalize`}>
+                <View
+                  className={`${getStatusColor(order.status)} rounded-lg px-3 py-1`}
+                >
+                  <Text
+                    className={`${getStatusTextColor(order.status)} text-xs font-semibold capitalize`}
+                  >
                     {order.status}
                   </Text>
                 </View>
@@ -95,7 +114,9 @@ export default function OrdersScreen() {
 
               {/* Order Details */}
               <View className="bg-slate-50 rounded-lg p-3 mb-3">
-                <Text className="text-slate-900 font-semibold text-sm mb-2">Items</Text>
+                <Text className="text-slate-900 font-semibold text-sm mb-2">
+                  Items
+                </Text>
                 {order.items?.map((item, idx) => (
                   <Text key={idx} className="text-slate-600 text-xs">
                     • {item.name} x{item.quantity}
@@ -113,13 +134,17 @@ export default function OrdersScreen() {
                 </View>
                 <View className="flex-row justify-between">
                   <Text className="text-slate-900 font-bold">Total</Text>
-                  <Text className="text-orange-600 font-bold">Rs {order.total || 0}</Text>
+                  <Text className="text-orange-600 font-bold">
+                    Rs {order.total || 0}
+                  </Text>
                 </View>
               </View>
 
-              {order.status !== 'delivered' && (
+              {order.status !== "delivered" && (
                 <Pressable className="mt-3 bg-orange-600 rounded-lg py-2 items-center">
-                  <Text className="text-white font-semibold text-sm">Track Order</Text>
+                  <Text className="text-white font-semibold text-sm">
+                    Track Order
+                  </Text>
                 </Pressable>
               )}
             </View>

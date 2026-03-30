@@ -1,6 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from "react";
 
-const WS_URL = 'wss://momsmagic-production.up.railway.app';
+const WS_URL = "wss://momsmagic-production.up.railway.app";
 
 export function useSyncProvider(onUpdate) {
   const wsRef = useRef(null);
@@ -14,31 +14,31 @@ export function useSyncProvider(onUpdate) {
       wsRef.current = new WebSocket(WS_URL);
 
       wsRef.current.onopen = () => {
-        console.log('WebSocket connected');
+        console.log("WebSocket connected");
         reconnectAttemptsRef.current = 0;
         // Send initial hello message
-        wsRef.current.send(JSON.stringify({ type: 'hello', client: 'mobile' }));
+        wsRef.current.send(JSON.stringify({ type: "hello", client: "mobile" }));
       };
 
       wsRef.current.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
-          if (message.type === 'refresh' || message.type === 'update') {
+          if (message.type === "refresh" || message.type === "update") {
             if (onUpdate) {
               onUpdate(message);
             }
           }
         } catch (err) {
-          console.error('Failed to parse WebSocket message:', err);
+          console.error("Failed to parse WebSocket message:", err);
         }
       };
 
       wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error("WebSocket error:", error);
       };
 
       wsRef.current.onclose = () => {
-        console.log('WebSocket disconnected');
+        console.log("WebSocket disconnected");
         // Try to reconnect
         if (reconnectAttemptsRef.current < maxReconnectAttempts) {
           reconnectAttemptsRef.current += 1;
@@ -46,7 +46,7 @@ export function useSyncProvider(onUpdate) {
         }
       };
     } catch (error) {
-      console.error('Failed to connect WebSocket:', error);
+      console.error("Failed to connect WebSocket:", error);
     }
   }, [onUpdate]);
 
