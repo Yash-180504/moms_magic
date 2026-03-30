@@ -132,6 +132,8 @@ export const query = (text, params = []) => {
           };
         });
 
+        console.log(`[DB] Returning ${rows.length} providers`);
+
         // Sort by rating and total_orders
         rows.sort((a, b) => {
           if (b.rating !== a.rating) return b.rating - a.rating;
