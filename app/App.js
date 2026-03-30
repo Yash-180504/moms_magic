@@ -13,11 +13,14 @@ import { AuthContext, AuthProvider } from "./src/context/AuthContext";
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  loginContainer: {
+  scrollView: {
     flex: 1,
     backgroundColor: "white",
+  },
+  scrollViewContent: {
     padding: 20,
     justifyContent: "center",
+    minHeight: "100%",
   },
   homeContainer: {
     flex: 1,
@@ -69,12 +72,17 @@ function AppContent() {
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
-  const { isAuthenticated, login, logout, user, loading: authLoading } =
-    useContext(AuthContext);
+  const {
+    isAuthenticated,
+    login,
+    logout,
+    user,
+    loading: authLoading,
+  } = useContext(AuthContext);
 
   if (authLoading) {
     return (
-      <View style={styles.loginContainer}>
+      <View style={[styles.scrollView, { justifyContent: "center", alignItems: "center" }]}>
         <ActivityIndicator size="large" color="#EA580C" />
       </View>
     );
@@ -111,7 +119,7 @@ function AppContent() {
   return (
     <View style={styles.screen}>
       <StatusBar style="dark" />
-      <ScrollView style={styles.loginContainer}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
         <Text style={styles.heading}>Moms Magic</Text>
         {error && <Text style={styles.error}>{error}</Text>}
         <TextInput
