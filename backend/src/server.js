@@ -27,10 +27,9 @@ app.use(
       }
 
       // Production: allow Vercel frontend domains (production + preview + staging)
-      const isVercelDomain = origin && (
-        origin.includes(".vercel.app") ||
-        origin === process.env.FRONTEND_URL
-      );
+      const isVercelDomain =
+        origin &&
+        (origin.includes(".vercel.app") || origin === process.env.FRONTEND_URL);
 
       if (isVercelDomain) {
         callback(null, true);
