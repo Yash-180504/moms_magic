@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { AuthContext } from "../context/AuthContext";
-import LoginScreenSimple from "../screens/LoginScreenSimple";
+import LoginScreenMinimal from "../screens/LoginScreenMinimal";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 
 const Stack = createNativeStackNavigator();
@@ -71,7 +71,7 @@ export function AppNavigator() {
         {isAuthenticated ? (
           <Stack.Screen name="Home" component={HomeScreen} />
         ) : (
-          <Stack.Screen name="Login" component={LoginScreenSimple} />
+          <Stack.Screen name="Login" component={LoginScreenMinimal} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
