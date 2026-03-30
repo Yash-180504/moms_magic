@@ -1,4 +1,4 @@
-# 🍱 Mom's Magic
+# 🍱 Mom's Magic #
 
 > A full-stack marketplace connecting home cooks with people who crave a taste of home — digitizing the informal tiffin/mess service industry one meal at a time.
 
