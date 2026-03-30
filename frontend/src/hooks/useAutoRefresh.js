@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const WS_URL = 'wss://momsmagic-production.up.railway.app';
+const WS_URL = "wss://momsmagic-production.up.railway.app";
 
 /**
  * Connects to the backend WebSocket and calls `onRefresh` every time
