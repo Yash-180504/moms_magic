@@ -162,8 +162,6 @@ export const query = (text, params = []) => {
     }
   });
 };
-  });
-};
 
 export default {
   query,
