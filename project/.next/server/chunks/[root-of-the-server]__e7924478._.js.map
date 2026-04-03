@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
+    {"offset": {"line": 43, "column": 0}, "map": {"version":3,"sources":["file:///Users/orcode_creator/Desktop/moms_magic/project/app/api/refresh/route.js"],"sourcesContent":["// Server-Sent Events endpoint — replaces the WebSocket server.\n// Sends a \"refresh\" event every 2 seconds so clients can re-fetch data.\nexport const dynamic = 'force-dynamic'\n\nexport async function GET() {\n  const encoder = new TextEncoder()\n  let intervalId\n\n  const stream = new ReadableStream({\n    start(controller) {\n      intervalId = setInterval(() => {\n        try {\n          controller.enqueue(encoder.encode('event: refresh\\ndata: {}\\n\\n'))\n        } catch {\n          clearInterval(intervalId)\n        }\n      }, 2000)\n    },\n    cancel() {\n      clearInterval(intervalId)\n    },\n  })\n\n  return new Response(stream, {\n    headers: {\n      'Content-Type': 'text/event-stream',\n      'Cache-Control': 'no-cache, no-transform',\n      Connection: 'keep-alive',\n    },\n  })\n}\n"],"names":[],"mappings":"AAAA,+DAA+D;AAC/D,wEAAwE;;;;;;;AACjE,MAAM,UAAU;AAEhB,eAAe;IACpB,MAAM,UAAU,IAAI;IACpB,IAAI;IAEJ,MAAM,SAAS,IAAI,eAAe;QAChC,OAAM,UAAU;YACd,aAAa,YAAY;gBACvB,IAAI;oBACF,WAAW,OAAO,CAAC,QAAQ,MAAM,CAAC;gBACpC,EAAE,OAAM;oBACN,cAAc;gBAChB;YACF,GAAG;QACL;QACA;YACE,cAAc;QAChB;IACF;IAEA,OAAO,IAAI,SAAS,QAAQ;QAC1B,SAAS;YACP,gBAAgB;YAChB,iBAAiB;YACjB,YAAY;QACd;IACF;AACF","debugId":null}}]
+}

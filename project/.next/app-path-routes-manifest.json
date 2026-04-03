@@ -1,0 +1,9 @@
+{
+  "/api/auth/login/route": "/api/auth/login",
+  "/api/auth/me/route": "/api/auth/me",
+  "/api/providers/route": "/api/providers",
+  "/api/refresh/route": "/api/refresh",
+  "/login/page": "/login",
+  "/page": "/",
+  "/profile/page": "/profile"
+}

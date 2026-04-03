@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST='{"components/Navbar.jsx -> react-leaflet":{"id":3538,"files":["static/chunks/d0deef33.cac6acee3fffe7af.js","static/chunks/538.329a043d9e42d7ae.js"]}}';

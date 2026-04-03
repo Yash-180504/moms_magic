@@ -6,6 +6,11 @@ export async function GET(request) {
   const { payload, unauth } = getAuth(request)
   if (unauth) return unauth
 
+  if (payload.role === 'admin') {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com'
+    return NextResponse.json({ user: { id: 'admin', name: 'Admin', email: adminEmail, role: 'admin' } })
+  }
+
   try {
     const result = await query('SELECT * FROM users WHERE id = $1', [payload.sub])
     if (!result.rows.length) return err('User not found', 404)

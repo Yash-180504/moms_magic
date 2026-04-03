@@ -15,7 +15,8 @@ export async function GET(_request, { params }) {
     if (!result.rows.length) return err('Provider not found', 404)
     return NextResponse.json({ provider: result.rows[0] })
   } catch (e) {
-    return err(e.message)
+    console.error('GET /api/providers/:id failed:', e)
+    return err(e?.message || String(e) || 'Unexpected error', 500)
   }
 }
 

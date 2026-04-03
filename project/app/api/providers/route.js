@@ -34,7 +34,8 @@ export async function GET(request) {
     )
     return NextResponse.json({ providers: result.rows })
   } catch (e) {
-    return err(e.message)
+    console.error('GET /api/providers failed:', e)
+    return err(e?.message || String(e) || 'Unexpected error', 500)
   }
 }
 

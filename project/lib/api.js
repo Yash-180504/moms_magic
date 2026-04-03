@@ -13,14 +13,20 @@ function authHeaders() {
 }
 
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-      ...options.headers,
-    },
-  })
+  let res
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(),
+        ...options.headers,
+      },
+    })
+  } catch (e) {
+    throw new Error(`Network error while calling ${path}: ${e.message}`)
+  }
+
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw Object.assign(new Error(data.error || `HTTP ${res.status}`), { status: res.status, data })
   return data
@@ -74,6 +80,11 @@ export const upload = {
     return data
   },
   deleteAsset: (id) => request(`/upload/${id}`, { method: 'DELETE' }),
+}
+
+export const admin = {
+  login: (body) => request('/admin/login', { method: 'POST', body: JSON.stringify(body) }),
+  data: () => request('/admin/data'),
 }
 
 export function imgUrl(fileKey, transforms = '') {

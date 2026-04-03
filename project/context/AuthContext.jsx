@@ -10,12 +10,37 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('mm_token')
+    const adminToken = localStorage.getItem('mm_admin_token')
+    const userToken = localStorage.getItem('mm_token')
+
+    const token = adminToken || userToken
     if (!token) { setLoading(false); return }
-    auth.me()
-      .then(({ user }) => setUser(user))
-      .catch(() => localStorage.removeItem('mm_token'))
-      .finally(() => setLoading(false))
+
+    const fetchMe = async () => {
+      try {
+        const prevToken = localStorage.getItem('mm_token')
+        if (adminToken) {
+          // Temporarily use admin token for /api/auth/me
+          localStorage.setItem('mm_token', adminToken)
+        }
+
+        const { user } = await auth.me()
+        setUser(user)
+      } catch (err) {
+        if (adminToken) localStorage.removeItem('mm_admin_token')
+        else localStorage.removeItem('mm_token')
+        setUser(null)
+      } finally {
+        if (adminToken && userToken) {
+          localStorage.setItem('mm_token', userToken)
+        } else if (adminToken) {
+          localStorage.removeItem('mm_token')
+        }
+        setLoading(false)
+      }
+    }
+
+    fetchMe()
   }, [])
 
   const login = useCallback(async (email, password) => {

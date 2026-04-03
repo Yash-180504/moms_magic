@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -31,6 +31,9 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [flash, setFlash] = useState(null)
 
+  const [addressForm, setAddressForm] = useState({ address1: '', address2: '', city: '', state: '', pincode: '' })
+  const [pincodeError, setPincodeError] = useState(null)
+
   const [pwOpen, setPwOpen] = useState(false)
   const [pw, setPw] = useState({ current: '', next: '', confirm: '' })
   const [showPw, setShowPw] = useState({})
@@ -60,6 +63,8 @@ export default function ProfilePage() {
     setFlash({ type, msg })
     setTimeout(() => setFlash(null), 3500)
   }
+
+  // Address book now lives in the header; profile has no location form.
 
   async function saveProfile(e) {
     e.preventDefault()
@@ -177,6 +182,8 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
+
+        {/* Address book is now in header, not in profile. */}
 
         {/* Change password */}
         <div className="bg-white rounded-2xl border border-[#FCEAE1] mb-4 overflow-hidden">
