@@ -14,6 +14,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import ProviderCard from "@/components/ProviderCard";
 import HowItWorks from "@/components/HowItWorks";
+import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import { providers as providersApi } from "@/lib/api";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
@@ -281,6 +282,8 @@ export default function HomePage() {
         </section>
 
         <HowItWorks />
+
+        <PricingSection />
 
         {/* Provider CTA */}
         <section
