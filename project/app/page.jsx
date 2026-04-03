@@ -382,7 +382,7 @@ export default function HomePage() {
 
         {/* Provider CTA */}
         <section
-          className="bg-gradient-to-r from-[#EA580C] to-[#F97316] py-14 px-4 sm:px-6 lg:px-8"
+          className="bg-linear-to-r from-[#EA580C] to-[#F97316] py-14 px-4 sm:px-6 lg:px-8"
           aria-labelledby="provider-cta-heading"
         >
           <div className="max-w-3xl mx-auto text-center text-white">
