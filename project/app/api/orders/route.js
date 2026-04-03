@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import pool, { query } from "@/lib/db";
 import { getAuth, checkRole, err } from "@/lib/auth";
+import { computeFees } from "@/lib/fees";
 
 // POST /api/orders
 export async function POST(request) {
@@ -29,7 +30,7 @@ export async function POST(request) {
     );
     const menuMap = Object.fromEntries(menuRes.rows.map((r) => [r.id, r]));
 
-    let total = 0;
+    let subtotal = 0;
     const validatedItems = [];
     for (const item of items) {
       const menu = menuMap[item.menu_item_id];
@@ -39,7 +40,7 @@ export async function POST(request) {
           400,
         );
       const qty = parseInt(item.quantity) || 1;
-      total += menu.price * qty;
+      subtotal += menu.price * qty;
       validatedItems.push({
         menu_item_id: menu.id,
         name: menu.name,
@@ -48,6 +49,8 @@ export async function POST(request) {
       });
     }
 
+    const { grandTotal } = computeFees(subtotal);
+
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
@@ -55,7 +58,7 @@ export async function POST(request) {
       const orderRes = await client.query(
         `INSERT INTO orders (customer_id, provider_id, total_amount, delivery_address, notes)
          VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-        [payload.sub, provider_id, total, delivery_address, notes || null],
+        [payload.sub, provider_id, grandTotal, delivery_address, notes || null],
       );
       const order = orderRes.rows[0];
 

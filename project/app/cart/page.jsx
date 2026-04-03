@@ -15,6 +15,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { orders as ordersApi } from "@/lib/api";
+import { computeFees, GST_RATE } from "@/lib/fees";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 
@@ -54,6 +55,8 @@ export default function CartPage() {
   const entries = useMemo(() => {
     return Object.values(cart.items || {});
   }, [cart.items]);
+
+  const bill = useMemo(() => computeFees(total), [total]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -290,9 +293,33 @@ export default function CartPage() {
                       ))}
                     </ul>
 
-                    <div className="px-5 py-4 border-t border-[#FCEAE1] flex items-center justify-between">
-                      <span className="font-bold text-[#0F172A]">Total</span>
-                      <span className="font-bold text-[#EA580C]">₹{total}</span>
+                    <div className="px-5 py-4 border-t border-[#FCEAE1] space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-[#64748B]">Subtotal</span>
+                        <span className="font-semibold text-[#0F172A]">
+                          ₹{bill.subtotal}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-[#64748B]">
+                          GST ({Math.round(GST_RATE * 100)}%)
+                        </span>
+                        <span className="font-semibold text-[#0F172A]">
+                          ₹{bill.gstAmount}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-[#64748B]">Delivery fee</span>
+                        <span className="font-semibold text-[#0F172A]">
+                          ₹{bill.deliveryFee}
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-[#FCEAE1] flex items-center justify-between">
+                        <span className="font-bold text-[#0F172A]">Total</span>
+                        <span className="font-bold text-[#EA580C]">
+                          ₹{bill.grandTotal}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -368,7 +395,7 @@ export default function CartPage() {
                       {ordering
                         ? "Placing order…"
                         : user
-                          ? `Place Order — ₹${total}`
+                          ? `Place Order — ₹${bill.grandTotal}`
                           : "Log in to order"}
                     </button>
 

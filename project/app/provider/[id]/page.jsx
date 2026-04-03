@@ -18,6 +18,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { providers as providersApi, menu as menuApi } from "@/lib/api";
+import { computeFees } from "@/lib/fees";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { useCart } from "@/context/CartContext";
 
@@ -31,6 +32,8 @@ export default function ProviderDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { cart, itemCount, total, addItem, removeOne, getQty } = useCart();
+
+  const bill = computeFees(total);
 
   const [provider, setProvider] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
@@ -216,11 +219,13 @@ export default function ProviderDetailPage() {
                   <p className="font-bold text-[#0F172A] truncate">View cart</p>
                   <p className="text-xs text-[#64748B] truncate">
                     {cart.provider?.id === id
-                      ? `${itemCount} item${itemCount === 1 ? "" : "s"} • ₹${total}`
+                      ? `${itemCount} item${itemCount === 1 ? "" : "s"} • ₹${bill.grandTotal}`
                       : `${itemCount} item${itemCount === 1 ? "" : "s"} in cart from another kitchen`}
                   </p>
                 </div>
-                <span className="font-bold text-[#EA580C]">₹{total}</span>
+                <span className="font-bold text-[#EA580C]">
+                  ₹{bill.grandTotal}
+                </span>
               </button>
             </div>
           </div>
