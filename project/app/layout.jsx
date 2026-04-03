@@ -7,10 +7,14 @@ import InstallBanner from '@/components/InstallBanner'
 export const metadata = {
   title: "Mom's Magic — Home-Cooked Food Delivered",
   description: 'Find verified home cooks near you and get freshly cooked meals delivered every day.',
-  manifest: '/manifest.json',
+  manifest: '/favicon/site.webmanifest',
   icons: [
-    { rel: 'icon', url: '/favicon.svg', type: 'image/svg+xml' },
-    { rel: 'apple-touch-icon', url: '/icons/pwa-192x192.png' },
+    { rel: 'icon', url: '/favicon/favicon.ico', type: 'image/x-icon' },
+    { rel: 'icon', url: '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    { rel: 'icon', url: '/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    { rel: 'apple-touch-icon', url: '/favicon/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    { rel: 'icon', url: '/favicon/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+    { rel: 'icon', url: '/favicon/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
   ],
 }
 
