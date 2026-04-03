@@ -19,6 +19,21 @@ import Footer from "@/components/Footer";
 import { providers as providersApi } from "@/lib/api";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
+const TOP_TIER_CITIES = [
+  "Bhubaneswar",
+  "Mumbai",
+  "Delhi",
+  "Bengaluru",
+  "Hyderabad",
+  "Chennai",
+  "Kolkata",
+  "Pune",
+  "Ahmedabad",
+  "Jaipur",
+];
+
+const DEFAULT_CITY = "Bhubaneswar";
+
 const CATEGORIES = [
   { id: "all", label: "All" },
   { id: "veg", label: "Veg Only", apiParam: { veg: "true" } },
@@ -67,7 +82,9 @@ function ProviderSkeleton() {
 export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [locationQuery, setLocationQuery] = useState("");
+  const [selectedCity, setSelectedCity] = useState(DEFAULT_CITY);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState("");
   const [providerList, setProviderList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -80,7 +97,7 @@ export default function HomePage() {
       const catConfig = CATEGORIES.find((c) => c.id === activeCategory);
       const params = {
         ...(catConfig?.apiParam || {}),
-        ...(locationQuery ? { city: locationQuery } : {}),
+        city: selectedCity || DEFAULT_CITY,
         ...(searchQuery ? { search: searchQuery } : {}),
       };
       const data = await providersApi.list(params);
@@ -91,13 +108,66 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  }, [activeCategory, searchQuery, locationQuery]);
+  }, [activeCategory, searchQuery, selectedCity]);
 
   useEffect(() => {
     initialLoaded.current = false;
     const debounce = setTimeout(fetchProviders, 300);
     return () => clearTimeout(debounce);
   }, [fetchProviders]);
+
+  async function handleUseMyLocation() {
+    if (typeof window === "undefined") return;
+    setLocationError("");
+
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported on this device.");
+      return;
+    }
+
+    setLocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const res = await fetch(
+            `/api/geo/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`,
+          );
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data?.error || "Could not detect city");
+
+          const rawCity = String(data?.city || "").trim();
+          if (!rawCity) throw new Error("Could not detect city");
+
+          const normalized = rawCity.toLowerCase();
+          const match = TOP_TIER_CITIES.find(
+            (c) => c.toLowerCase() === normalized,
+          );
+
+          if (!match) {
+            setLocationError(
+              "We currently support only the top 10 cities in the dropdown.",
+            );
+            return;
+          }
+
+          setSelectedCity(match);
+        } catch (e) {
+          setLocationError(e?.message || "Could not detect city");
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        if (err?.code === 1) setLocationError("Location permission denied.");
+        else setLocationError("Could not fetch your location.");
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 },
+    );
+  }
 
   useAutoRefresh(fetchProviders);
 
@@ -139,14 +209,34 @@ export default function HomePage() {
                   className="text-[#EA580C] shrink-0"
                   aria-hidden="true"
                 />
-                <input
-                  type="text"
-                  placeholder="Your area or city…"
-                  value={locationQuery}
-                  onChange={(e) => setLocationQuery(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-[#0F172A] placeholder-[#64748B] outline-none"
-                  aria-label="Enter your location"
-                />
+                <label className="sr-only" htmlFor="city-select">
+                  Select city
+                </label>
+                <select
+                  id="city-select"
+                  value={selectedCity}
+                  onChange={(e) => {
+                    setSelectedCity(e.target.value);
+                    setLocationError("");
+                  }}
+                  className="flex-1 bg-transparent text-sm text-[#0F172A] outline-none cursor-pointer"
+                  aria-label="Select city"
+                >
+                  {TOP_TIER_CITIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={handleUseMyLocation}
+                  disabled={locating}
+                  className="shrink-0 text-xs font-semibold text-[#EA580C] hover:text-[#C2410C] disabled:opacity-60"
+                  aria-label="Use my current location"
+                >
+                  {locating ? "Locating…" : "Use location"}
+                </button>
               </div>
               <button
                 onClick={fetchProviders}
@@ -157,6 +247,11 @@ export default function HomePage() {
                 Find Kitchens
               </button>
             </div>
+            {locationError ? (
+              <p className="mt-3 text-sm text-red-200/90" role="status">
+                {locationError}
+              </p>
+            ) : null}
           </div>
         </section>
 

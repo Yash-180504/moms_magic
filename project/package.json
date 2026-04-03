@@ -7,7 +7,8 @@
     "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "tunnel": "npx cloudflared tunnel --url http://localhost:3000"
+    "tunnel": "npx cloudflared tunnel --url http://localhost:3000",
+    "seed:top-cities": "node scripts/seed-top-cities.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
