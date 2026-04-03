@@ -52,6 +52,9 @@ export default function CartPage() {
   const [orderSuccess, setOrderSuccess] = useState(null);
   const [orderError, setOrderError] = useState(null);
 
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [savedAddressId, setSavedAddressId] = useState("");
+
   const entries = useMemo(() => {
     return Object.values(cart.items || {});
   }, [cart.items]);
@@ -69,6 +72,38 @@ export default function CartPage() {
     const formatted = formatSavedAddress(addr);
     if (formatted) setDeliveryAddress(formatted);
   }, [cart.deliveryAddress, setDeliveryAddress]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!user) {
+      setSavedAddresses([]);
+      setSavedAddressId("");
+      return;
+    }
+
+    const all = JSON.parse(localStorage.getItem("mm_addresses") || "{}");
+    const userAddresses = all[user.id] || [];
+    setSavedAddresses(userAddresses);
+
+    const selected = JSON.parse(
+      localStorage.getItem("mm_selected_address") || "null",
+    );
+    if (selected?.userId === user.id && selected?.address?.id) {
+      setSavedAddressId(selected.address.id);
+    }
+  }, [user]);
+
+  function applySavedAddress(id) {
+    if (!user) return;
+    setSavedAddressId(id);
+    const found = savedAddresses.find((a) => a.id === id);
+    if (!found) return;
+    localStorage.setItem(
+      "mm_selected_address",
+      JSON.stringify({ userId: user.id, address: found }),
+    );
+    setDeliveryAddress(formatSavedAddress(found));
+  }
 
   async function placeOrder(e) {
     e.preventDefault();
@@ -228,65 +263,73 @@ export default function CartPage() {
                       {entries.map(({ item, qty }) => (
                         <li
                           key={item.id}
-                          className="p-4 sm:p-5 flex items-center gap-4"
+                          className="p-4 sm:p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4"
                         >
-                          <div className="w-14 h-14 rounded-xl overflow-hidden bg-[#FDF4F0] shrink-0 flex items-center justify-center">
-                            {item.image_url ? (
-                              <img
-                                src={item.image_url}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <ChefHat
-                                size={20}
-                                className="text-[#EA580C]"
-                                aria-hidden="true"
-                              />
-                            )}
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <div className="w-14 h-14 rounded-xl overflow-hidden bg-[#FDF4F0] shrink-0 flex items-center justify-center">
+                              {item.image_url ? (
+                                <img
+                                  src={item.image_url}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <ChefHat
+                                  size={20}
+                                  className="text-[#EA580C]"
+                                  aria-hidden="true"
+                                />
+                              )}
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-[#0F172A] truncate">
+                                {item.name}
+                              </p>
+                              <p className="text-xs sm:text-sm text-[#64748B]">
+                                ₹{item.price} each
+                              </p>
+                            </div>
                           </div>
 
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-[#0F172A] truncate">
-                              {item.name}
-                            </p>
-                            <p className="text-sm text-[#64748B]">
-                              ₹{item.price} each
-                            </p>
+                          <div className="flex items-center justify-between gap-3 sm:justify-start sm:gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => removeOne(item.id)}
+                                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#FDF4F0] text-[#EA580C] flex items-center justify-center hover:bg-[#EA580C] hover:text-white transition-colors cursor-pointer"
+                                aria-label="Remove one"
+                              >
+                                <Minus size={14} />
+                              </button>
+                              <span className="w-6 text-center font-bold text-[#0F172A]">
+                                {qty}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => addItem(cart.provider, item)}
+                                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#EA580C] text-white flex items-center justify-center hover:bg-[#C2410C] transition-colors cursor-pointer"
+                                aria-label="Add one"
+                              >
+                                <Plus size={14} />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => removeItem(item.id)}
+                                className="ml-1 text-[#64748B] hover:text-red-600 transition-colors cursor-pointer"
+                                aria-label="Remove item"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+
+                            <div className="sm:hidden font-bold text-[#0F172A] shrink-0">
+                              ₹{item.price * qty}
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => removeOne(item.id)}
-                              className="w-9 h-9 rounded-xl bg-[#FDF4F0] text-[#EA580C] flex items-center justify-center hover:bg-[#EA580C] hover:text-white transition-colors cursor-pointer"
-                              aria-label="Remove one"
-                            >
-                              <Minus size={14} />
-                            </button>
-                            <span className="w-6 text-center font-bold text-[#0F172A]">
-                              {qty}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => addItem(cart.provider, item)}
-                              className="w-9 h-9 rounded-xl bg-[#EA580C] text-white flex items-center justify-center hover:bg-[#C2410C] transition-colors cursor-pointer"
-                              aria-label="Add one"
-                            >
-                              <Plus size={14} />
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => removeItem(item.id)}
-                              className="ml-1 text-[#64748B] hover:text-red-600 transition-colors cursor-pointer"
-                              aria-label="Remove item"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-
-                          <div className="w-20 text-right font-bold text-[#0F172A] shrink-0">
+                          <div className="hidden sm:block w-20 text-right font-bold text-[#0F172A] shrink-0">
                             ₹{item.price * qty}
                           </div>
                         </li>
@@ -336,6 +379,40 @@ export default function CartPage() {
                   </div>
 
                   <form onSubmit={placeOrder} className="p-5 space-y-4">
+                    {user && savedAddresses.length > 0 && (
+                      <div>
+                        <label
+                          htmlFor="saved-address"
+                          className="block text-xs font-semibold text-[#0F172A] mb-1"
+                        >
+                          Saved addresses
+                        </label>
+                        <select
+                          id="saved-address"
+                          value={savedAddressId}
+                          onChange={(e) => applySavedAddress(e.target.value)}
+                          className="w-full text-sm border border-[#FCEAE1] rounded-xl px-3 py-2 text-[#0F172A] outline-none focus:border-[#EA580C] focus:ring-2 focus:ring-[#EA580C]/20 transition-all bg-white"
+                        >
+                          <option value="" disabled>
+                            Select an address
+                          </option>
+                          {savedAddresses.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.address1}
+                              {a.city ? `, ${a.city}` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {user && savedAddresses.length === 0 && (
+                      <p className="text-xs text-[#64748B]">
+                        No saved addresses yet. Add one from Profile → Address
+                        Book.
+                      </p>
+                    )}
+
                     <div>
                       <label
                         htmlFor="delivery-address"
@@ -356,8 +433,7 @@ export default function CartPage() {
                         required
                       />
                       <p className="text-[11px] text-[#64748B] mt-1">
-                        Tip: use Address Book in the top bar to save and
-                        auto-fill.
+                        Tip: save addresses from Profile → Address Book.
                       </p>
                     </div>
 
