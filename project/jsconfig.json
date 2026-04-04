@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": "https://www.momsmagic.fun/",
+    "baseUrl": ".",
     "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["./*"]
