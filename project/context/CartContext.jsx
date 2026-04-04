@@ -22,7 +22,7 @@ function safeJsonParse(value, fallback) {
 }
 
 function normalizeCart(raw) {
-  const empty = { provider: null, items: {}, deliveryAddress: "", notes: "" };
+  const empty = { provider: null, items: {}, deliveryAddress: "", notes: "", subscription: null };
   if (!raw || typeof raw !== "object") return empty;
 
   const provider =
@@ -46,18 +46,28 @@ function normalizeCart(raw) {
     normalizedItems[menuItemId] = { item, qty };
   }
 
+  const subscription = raw.subscription && typeof raw.subscription === "object"
+    ? {
+        type: raw.subscription.type || null,
+        name: raw.subscription.name || "",
+        price: raw.subscription.price || 0,
+        duration: raw.subscription.duration || "",
+      }
+    : null;
+
   return {
     provider: provider?.id ? provider : null,
     items: normalizedItems,
     deliveryAddress:
       typeof raw.deliveryAddress === "string" ? raw.deliveryAddress : "",
     notes: typeof raw.notes === "string" ? raw.notes : "",
+    subscription,
   };
 }
 
 function readCartFromStorage() {
   if (typeof window === "undefined")
-    return { provider: null, items: {}, deliveryAddress: "", notes: "" };
+    return { provider: null, items: {}, deliveryAddress: "", notes: "", subscription: null };
   return normalizeCart(
     safeJsonParse(localStorage.getItem(CART_KEY) || "null", null),
   );
@@ -75,6 +85,10 @@ export function CartProvider({ children }) {
     return Object.values(cart.items).reduce((sum, e) => sum + (e.qty || 0), 0);
   }, [cart.items]);
 
+  const cartCount = useMemo(() => {
+    return itemCount + (cart.subscription ? 1 : 0);
+  }, [itemCount, cart.subscription]);
+
   const total = useMemo(() => {
     return Object.values(cart.items).reduce(
       (sum, e) => sum + (Number(e.item?.price) || 0) * (e.qty || 0),
@@ -83,7 +97,24 @@ export function CartProvider({ children }) {
   }, [cart.items]);
 
   const clearCart = useCallback(() => {
-    setCart({ provider: null, items: {}, deliveryAddress: "", notes: "" });
+    setCart({ provider: null, items: {}, deliveryAddress: "", notes: "", subscription: null });
+  }, []);
+
+  const addSubscription = useCallback((subscription) => {
+    if (!subscription?.type || !subscription?.price) return;
+    setCart((prev) => ({
+      ...prev,
+      subscription: {
+        type: subscription.type,
+        name: subscription.name,
+        price: subscription.price,
+        duration: subscription.duration || "1 Month",
+      },
+    }));
+  }, []);
+
+  const removeSubscription = useCallback(() => {
+    setCart((prev) => ({ ...prev, subscription: null }));
   }, []);
 
   const setDeliveryAddress = useCallback((deliveryAddress) => {
@@ -185,6 +216,7 @@ export function CartProvider({ children }) {
     return {
       cart,
       itemCount,
+      cartCount,
       total,
       getQty,
       addItem,
@@ -193,10 +225,13 @@ export function CartProvider({ children }) {
       clearCart,
       setDeliveryAddress,
       setNotes,
+      addSubscription,
+      removeSubscription,
     };
   }, [
     cart,
     itemCount,
+    cartCount,
     total,
     getQty,
     addItem,
@@ -205,6 +240,8 @@ export function CartProvider({ children }) {
     clearCart,
     setDeliveryAddress,
     setNotes,
+    addSubscription,
+    removeSubscription,
   ]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

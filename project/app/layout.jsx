@@ -4,12 +4,18 @@ import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import BottomNav from "@/components/BottomNav";
 import InstallBanner from "@/components/InstallBanner";
+import PWAInstaller from "@/components/PWAInstaller";
 
 export const metadata = {
   title: "Mom's Magic — Home-Cooked Food Delivered",
   description:
     "Find verified home cooks near you and get freshly cooked meals delivered every day.",
-  manifest: "/favicon/site.webmanifest",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Mom's Magic",
+  },
   icons: [
     { rel: "icon", url: "/favicon/favicon.ico", type: "image/x-icon" },
     {
@@ -50,12 +56,15 @@ export const viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: "#EA580C",
+  appleMobileWebAppCapable: true,
+  appleMobileWebAppStatusBarStyle: "black-translucent",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
+        <PWAInstaller />
         <AuthProvider>
           <CartProvider>
             <div id="__next">{children}</div>

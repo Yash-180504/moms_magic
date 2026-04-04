@@ -155,8 +155,10 @@ export default function AddressBook({
           pincode,
         }));
       }
+      return true;
     } catch (err) {
       console.error("Reverse geocode failed:", err);
+      return false;
     }
   }
 
@@ -167,11 +169,11 @@ export default function AddressBook({
     }
     setLocationLoading(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
         setMapCenter([latitude, longitude]);
         setMarkerPosition([latitude, longitude]);
-        reverseGeocode(latitude, longitude);
+        await reverseGeocode(latitude, longitude);
         setLocationLoading(false);
       },
       (error) => {

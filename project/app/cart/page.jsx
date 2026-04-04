@@ -46,6 +46,7 @@ export default function CartPage() {
     clearCart,
     setDeliveryAddress,
     setNotes,
+    removeSubscription,
   } = useCart();
 
   const [ordering, setOrdering] = useState(false);
@@ -108,6 +109,14 @@ export default function CartPage() {
   async function placeOrder(e) {
     e.preventDefault();
     if (!user) return router.push("/login");
+    
+    // Handle subscription checkout
+    if (cart.subscription) {
+      router.push("/checkout");
+      return;
+    }
+    
+    // Handle regular order
     if (!cart.provider?.id) {
       setOrderError("Please add items from a kitchen first.");
       return;
@@ -124,17 +133,8 @@ export default function CartPage() {
     setOrdering(true);
     setOrderError(null);
     try {
-      const { order } = await ordersApi.create({
-        provider_id: cart.provider.id,
-        delivery_address: cart.deliveryAddress,
-        notes: cart.notes,
-        items: entries.map(({ item, qty }) => ({
-          menu_item_id: item.id,
-          quantity: qty,
-        })),
-      });
-      setOrderSuccess(order);
-      clearCart();
+      // Redirect to checkout with payment
+      router.push("/checkout");
     } catch (err) {
       setOrderError(err.message);
     } finally {
@@ -210,9 +210,58 @@ export default function CartPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Items */}
+              {/* Subscription or Items */}
               <section className="lg:col-span-2">
-                {entries.length === 0 ? (
+                {cart.subscription ? (
+                  <div className="bg-white rounded-2xl border border-[#FCEAE1] shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-[#FCEAE1] flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-[#FDF4F0] flex items-center justify-center">
+                        <ShoppingCart
+                          size={18}
+                          className="text-[#EA580C]"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <p className="font-heading font-bold text-lg text-[#0F172A]">
+                        Subscription Plan
+                      </p>
+                    </div>
+                    <ul className="divide-y divide-[#FCEAE1]">
+                      <li key="subscription" className="px-5 py-4 flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-[#0F172A]">
+                            {cart.subscription.name}
+                          </p>
+                          <p className="text-sm text-[#64748B] mt-0.5">
+                            Duration: {cart.subscription.duration}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="sm:hidden font-bold text-[#0F172A] shrink-0">
+                            ₹{cart.subscription.price}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeSubscription()}
+                            className="ml-1 text-[#64748B] hover:text-red-600 transition-colors cursor-pointer"
+                            aria-label="Remove subscription"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                          <div className="hidden sm:block w-20 text-right font-bold text-[#0F172A] shrink-0">
+                            ₹{cart.subscription.price}
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
+                    <div className="px-5 py-4 border-t border-[#FCEAE1] space-y-2 bg-[#FDF4F0]">
+                      <div className="text-sm flex items-center gap-1 text-[#EA580C]">
+                        <span>💡</span>
+                        <span>Subscription plans help you save on your favorite home-cooked meals!</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : entries.length === 0 ? (
                   <div className="bg-white rounded-2xl border border-[#FCEAE1] shadow-sm p-8 text-center">
                     <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] flex items-center justify-center mx-auto mb-3">
                       <ShoppingCart
@@ -225,14 +274,22 @@ export default function CartPage() {
                       Your cart is empty
                     </p>
                     <p className="text-sm text-[#64748B] mt-1">
-                      Browse kitchens and add meals to your cart.
+                      Browse kitchens and add meals to your cart or choose a subscription plan.
                     </p>
-                    <Link
-                      href="/"
-                      className="inline-flex items-center justify-center mt-5 bg-[#EA580C] text-white font-bold px-5 py-2.5 rounded-xl hover:bg-[#C2410C] transition-colors"
-                    >
-                      Browse kitchens
-                    </Link>
+                    <div className="flex flex-col sm:flex-row gap-3 pt-5">
+                      <Link
+                        href="/"
+                        className="flex-1 inline-flex items-center justify-center bg-[#EA580C] text-white font-bold px-5 py-2.5 rounded-xl hover:bg-[#C2410C] transition-colors"
+                      >
+                        Browse kitchens
+                      </Link>
+                      <Link
+                        href="/subscriptions"
+                        className="flex-1 inline-flex items-center justify-center bg-white border-2 border-[#EA580C] text-[#EA580C] font-bold px-5 py-2.5 rounded-xl hover:bg-[#FDF4F0] transition-colors"
+                      >
+                        View Plans
+                      </Link>
+                    </div>
                   </div>
                 ) : (
                   <div className="bg-white rounded-2xl border border-[#FCEAE1] shadow-sm overflow-hidden">
@@ -379,7 +436,7 @@ export default function CartPage() {
                   </div>
 
                   <form onSubmit={placeOrder} className="p-5 space-y-4">
-                    {user && savedAddresses.length > 0 && (
+                    {!cart.subscription && user && savedAddresses.length > 0 && (
                       <div>
                         <label
                           htmlFor="saved-address"
@@ -406,53 +463,68 @@ export default function CartPage() {
                       </div>
                     )}
 
-                    {user && savedAddresses.length === 0 && (
+                    {!cart.subscription && user && savedAddresses.length === 0 && (
                       <p className="text-xs text-[#64748B]">
                         No saved addresses yet. Add one from Profile → Address
                         Book.
                       </p>
                     )}
 
-                    <div>
-                      <label
-                        htmlFor="delivery-address"
-                        className="block text-xs font-semibold text-[#0F172A] mb-1"
-                      >
-                        Delivery Address{" "}
-                        <span className="text-red-500" aria-hidden="true">
-                          *
-                        </span>
-                      </label>
-                      <textarea
-                        id="delivery-address"
-                        rows={3}
-                        value={cart.deliveryAddress}
-                        onChange={(e) => setDeliveryAddress(e.target.value)}
-                        placeholder="Flat / building, street, city…"
-                        className="w-full text-sm border border-[#FCEAE1] rounded-xl px-3 py-2 text-[#0F172A] placeholder-[#64748B] outline-none focus:border-[#EA580C] focus:ring-2 focus:ring-[#EA580C]/20 transition-all resize-none"
-                        required
-                      />
-                      <p className="text-[11px] text-[#64748B] mt-1">
-                        Tip: save addresses from Profile → Address Book.
-                      </p>
-                    </div>
+                    {!cart.subscription && (
+                      <>
+                        <div>
+                          <label
+                            htmlFor="delivery-address"
+                            className="block text-xs font-semibold text-[#0F172A] mb-1"
+                          >
+                            Delivery Address{" "}
+                            <span className="text-red-500" aria-hidden="true">
+                              *
+                            </span>
+                          </label>
+                          <textarea
+                            id="delivery-address"
+                            rows={3}
+                            value={cart.deliveryAddress}
+                            onChange={(e) => setDeliveryAddress(e.target.value)}
+                            placeholder="Flat / building, street, city…"
+                            className="w-full text-sm border border-[#FCEAE1] rounded-xl px-3 py-2 text-[#0F172A] placeholder-[#64748B] outline-none focus:border-[#EA580C] focus:ring-2 focus:ring-[#EA580C]/20 transition-all resize-none"
+                            required
+                          />
+                          <p className="text-[11px] text-[#64748B] mt-1">
+                            Tip: save addresses from Profile → Address Book.
+                          </p>
+                        </div>
 
-                    <div>
-                      <label
-                        htmlFor="order-notes"
-                        className="block text-xs font-semibold text-[#0F172A] mb-1"
-                      >
-                        Notes (optional)
-                      </label>
-                      <input
-                        id="order-notes"
-                        type="text"
-                        value={cart.notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Spice level, allergies…"
-                        className="w-full text-sm border border-[#FCEAE1] rounded-xl px-3 py-2 text-[#0F172A] placeholder-[#64748B] outline-none focus:border-[#EA580C] focus:ring-2 focus:ring-[#EA580C]/20 transition-all"
-                      />
-                    </div>
+                        <div>
+                          <label
+                            htmlFor="order-notes"
+                            className="block text-xs font-semibold text-[#0F172A] mb-1"
+                          >
+                            Notes (optional)
+                          </label>
+                          <input
+                            id="order-notes"
+                            type="text"
+                            value={cart.notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Spice level, allergies…"
+                            className="w-full text-sm border border-[#FCEAE1] rounded-xl px-3 py-2 text-[#0F172A] placeholder-[#64748B] outline-none focus:border-[#EA580C] focus:ring-2 focus:ring-[#EA580C]/20 transition-all"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {cart.subscription && (
+                      <div className="bg-[#FDF4F0] border border-[#FCEAE1] rounded-xl p-3">
+                        <p className="text-xs text-[#0F172A]">
+                          <span className="font-semibold">Subscription Plan:</span> {cart.subscription.name} • {cart.subscription.duration}
+                        </p>
+                        <p className="text-xs text-[#64748B] mt-1">
+                          You'll be able to select your kitchen during checkout.
+                        </p>
+                      </div>
+                    )}
 
                     {orderError && (
                       <p
@@ -465,19 +537,21 @@ export default function CartPage() {
 
                     <button
                       type="submit"
-                      disabled={ordering || entries.length === 0}
+                      disabled={ordering || ((!cart.subscription && entries.length === 0))}
                       className="w-full bg-[#EA580C] text-white font-bold py-3 rounded-xl hover:bg-[#C2410C] active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {ordering
-                        ? "Placing order…"
+                        ? "Processing…"
                         : user
-                          ? `Place Order — ₹${bill.grandTotal}`
-                          : "Log in to order"}
+                          ? cart.subscription
+                            ? `Proceed to Checkout — ₹${cart.subscription.price}`
+                            : `Place Order — ₹${bill.grandTotal}`
+                          : "Log in to checkout"}
                     </button>
 
                     {!user && (
                       <p className="text-xs text-[#64748B] text-center">
-                        You’ll need to log in before placing an order.
+                        You'll need to log in before proceeding.
                       </p>
                     )}
                   </form>

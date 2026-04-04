@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   Home,
@@ -15,8 +16,13 @@ import { useCart } from "@/context/CartContext";
 
 export default function BottomNav() {
   const { user } = useAuth();
-  const { itemCount } = useCart();
+  const { cartCount } = useCart();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const tabs = [
     { href: "/", icon: Home, label: "Home" },
@@ -73,9 +79,9 @@ export default function BottomNav() {
                   aria-hidden="true"
                 />
               )}
-              {tab.isCart && itemCount > 0 && (
+              {mounted && tab.isCart && cartCount > 0 && (
                 <span className="absolute top-1 right-4 min-w-4 h-4 px-1 rounded-full bg-[#EA580C] text-white text-[9px] font-bold flex items-center justify-center">
-                  {itemCount > 99 ? "99+" : itemCount}
+                  {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}
             </Link>

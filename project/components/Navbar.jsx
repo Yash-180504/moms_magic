@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -19,9 +19,14 @@ import AddressBook from "@/components/AddressBook";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const { itemCount } = useCart();
+  const { cartCount } = useCart();
   const router = useRouter();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   function handleLogout() {
     logout();
@@ -88,9 +93,9 @@ export default function Navbar() {
                   aria-hidden="true"
                 />
                 <span>Cart</span>
-                {itemCount > 0 && (
+                {mounted && cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#EA580C] text-white text-[10px] font-bold flex items-center justify-center">
-                    {itemCount > 99 ? "99+" : itemCount}
+                    {cartCount > 99 ? "99+" : cartCount}
                   </span>
                 )}
               </Link>
@@ -149,6 +154,14 @@ export default function Navbar() {
                           My Orders
                         </Link>
                         <Link
+                          href="/subscriptions"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#0F172A] hover:bg-[#FDF4F0] transition-colors"
+                        >
+                          <ShoppingBag size={15} className="text-[#64748B]" />{" "}
+                          Plans
+                        </Link>
+                        <Link
                           href="/settings"
                           onClick={() => setUserMenuOpen(false)}
                           className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#0F172A] hover:bg-[#FDF4F0] transition-colors"
@@ -168,6 +181,19 @@ export default function Navbar() {
                               className="text-[#64748B]"
                             />{" "}
                             Dashboard
+                          </Link>
+                        )}
+                        {user.role === "admin" && (
+                          <Link
+                            href="/admin/subscriptions"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#0F172A] hover:bg-[#FDF4F0] transition-colors"
+                          >
+                            <LayoutDashboard
+                              size={15}
+                              className="text-[#64748B]"
+                            />{" "}
+                            Subscriptions
                           </Link>
                         )}
                         <button

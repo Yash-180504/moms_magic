@@ -16,21 +16,40 @@ import ProviderCard from "@/components/ProviderCard";
 import HowItWorks from "@/components/HowItWorks";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
+import AskMe from "@/components/AskMe";
 import { providers as providersApi } from "@/lib/api";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
-const TOP_TIER_CITIES = [
+const SERVICE_CITIES = [
   "Bhubaneswar",
   "Mumbai",
   "Delhi",
   "Bengaluru",
   "Hyderabad",
   "Chennai",
-  "Kolkata",
   "Pune",
   "Ahmedabad",
   "Jaipur",
+  "Gurgaon",
 ];
+
+const CITY_ALIASES = {
+  bhubaneswar: "Bhubaneswar",
+  mumbai: "Mumbai",
+  bombay: "Mumbai",
+  delhi: "Delhi",
+  newdelhi: "Delhi",
+  bangalore: "Bengaluru",
+  bengaluru: "Bengaluru",
+  hyderabad: "Hyderabad",
+  hydrabad: "Hyderabad",
+  chennai: "Chennai",
+  pune: "Pune",
+  ahmedabad: "Ahmedabad",
+  jaipur: "Jaipur",
+  gurgaon: "Gurgaon",
+  gurugram: "Gurgaon",
+};
 
 const DEFAULT_CITY = "Bhubaneswar";
 
@@ -82,22 +101,163 @@ function ProviderSkeleton() {
 export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState(DEFAULT_CITY);
+  const [autocompleteResults, setAutocompleteResults] = useState([]);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState("");
   const [providerList, setProviderList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const initialLoaded = useRef(false);
+  const searchAbortControllerRef = useRef(null);
+  const locationSearchTimeoutRef = useRef(null);
+
+  const normalizeCityKey = (value) =>
+    String(value || "").trim().toLowerCase().replace(/[^a-z]/g, "");
+
+  const resolveServiceCity = (value) => {
+    const raw = String(value || "").toLowerCase();
+    if (!raw.trim()) return null;
+
+    for (const [alias, city] of Object.entries(CITY_ALIASES)) {
+      if (raw.includes(alias)) return city;
+    }
+
+    for (const city of SERVICE_CITIES) {
+      if (raw.includes(normalizeCityKey(city))) return city;
+    }
+
+    const key = normalizeCityKey(value);
+    return CITY_ALIASES[key] || SERVICE_CITIES.find((city) => normalizeCityKey(city) === key) || null;
+  };
+
+  const resolveServiceCityFromOSMResult = (result) => {
+    const address = result?.address || {};
+    const candidates = [
+      address.city,
+      address.town,
+      address.village,
+      address.county,
+      address.state_district,
+      address.state,
+      address.region,
+      result?.display_name,
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+      const matchedCity = resolveServiceCity(candidate);
+      if (matchedCity) return matchedCity;
+    }
+
+    const allAddressParts = Object.values(address).filter(Boolean);
+    for (const part of allAddressParts) {
+      const matchedCity = resolveServiceCity(part);
+      if (matchedCity) return matchedCity;
+    }
+
+    return null;
+  };
+
+  const fetchLocationSuggestions = async (query) => {
+    if (!query) return;
+    if (locationSearchTimeoutRef.current) {
+      clearTimeout(locationSearchTimeoutRef.current);
+      locationSearchTimeoutRef.current = null;
+    }
+    if (searchAbortControllerRef.current) {
+      searchAbortControllerRef.current.abort();
+      searchAbortControllerRef.current = null;
+    }
+
+    const controller = new AbortController();
+    searchAbortControllerRef.current = controller;
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&countrycodes=in&q=${encodeURIComponent(
+          query,
+        )}`,
+        { signal: controller.signal },
+      );
+      if (!response.ok) throw new Error("Search failed");
+      const results = await response.json();
+      setAutocompleteResults(
+        results.map((item) => ({
+          id: item.place_id,
+          display_name: item.display_name,
+          address: item.address,
+          lat: item.lat,
+          lon: item.lon,
+        })),
+      );
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        setAutocompleteResults([]);
+      }
+    }
+  };
+
+  const handleLocationInput = (value) => {
+    setLocationQuery(value);
+    setLocationError("");
+    setAutocompleteResults([]);
+
+    const matchedCity = resolveServiceCity(value);
+    if (matchedCity) {
+      setSelectedCity(matchedCity);
+    } else if (!value) {
+      setSelectedCity(DEFAULT_CITY);
+    } else {
+      setSelectedCity("");
+    }
+
+    if (locationSearchTimeoutRef.current) {
+      clearTimeout(locationSearchTimeoutRef.current);
+    }
+    if (value.trim().length >= 3) {
+      locationSearchTimeoutRef.current = setTimeout(() => {
+        fetchLocationSuggestions(value.trim());
+      }, 250);
+    }
+  };
+
+  const handlePredictionSelect = (prediction) => {
+    const selectedText = prediction.display_name || "";
+    const matchedCity = resolveServiceCityFromOSMResult(prediction) || resolveServiceCity(selectedText);
+
+    setLocationQuery(selectedText);
+    setAutocompleteResults([]);
+    setLocationError("");
+
+    if (matchedCity) {
+      setSelectedCity(matchedCity);
+    } else {
+      setSelectedCity("");
+      setLocationError(
+        "We are sorry currently we are not providing our service to this location, we will be there soon",
+      );
+    }
+  };
 
   const fetchProviders = useCallback(async () => {
     if (!initialLoaded.current) setLoading(true);
     setError(null);
     try {
       const catConfig = CATEGORIES.find((c) => c.id === activeCategory);
+      const resolvedCity = resolveServiceCity(locationQuery) || selectedCity;
+      if (!resolvedCity) {
+        setProviderList([]);
+        setError(
+          "we are sorry currently we are not providing our service to this location, we will be there soon",
+        );
+        setLoading(false);
+        return;
+      }
+      setSelectedCity(resolvedCity);
       const params = {
         ...(catConfig?.apiParam || {}),
-        city: selectedCity || DEFAULT_CITY,
+        city: resolvedCity,
         ...(searchQuery ? { search: searchQuery } : {}),
       };
       const data = await providersApi.list(params);
@@ -108,7 +268,7 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  }, [activeCategory, searchQuery, selectedCity]);
+  }, [activeCategory, searchQuery, selectedCity, locationQuery]);
 
   useEffect(() => {
     initialLoaded.current = false;
@@ -141,19 +301,17 @@ export default function HomePage() {
           const rawCity = String(data?.city || "").trim();
           if (!rawCity) throw new Error("Could not detect city");
 
-          const normalized = rawCity.toLowerCase();
-          const match = TOP_TIER_CITIES.find(
-            (c) => c.toLowerCase() === normalized,
-          );
-
-          if (!match) {
+          const matchedCity = resolveServiceCity(rawCity);
+          if (!matchedCity) {
+            setSelectedCity("");
             setLocationError(
-              "We currently support only the top 10 cities in the dropdown.",
+              "We are sorry currently we are not providing our service to this location, we will be there soon",
             );
             return;
           }
 
-          setSelectedCity(match);
+          setSelectedCity(matchedCity);
+          setLocationQuery(matchedCity);
         } catch (e) {
           setLocationError(e?.message || "Could not detect city");
         } finally {
@@ -203,55 +361,90 @@ export default function HomePage() {
               delivered every day — just like Ma used to make.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
-              <div className="flex-1 flex items-center gap-2 bg-white border border-[#FCEAE1] rounded-xl px-4 py-3 shadow-sm focus-within:border-[#EA580C] focus-within:ring-2 focus-within:ring-[#EA580C]/20 transition-all">
-                <MapPin
-                  size={18}
-                  className="text-[#EA580C] shrink-0"
-                  aria-hidden="true"
-                />
-                <label className="sr-only" htmlFor="city-select">
-                  Select city
-                </label>
-                <select
-                  id="city-select"
-                  value={selectedCity}
-                  onChange={(e) => {
-                    setSelectedCity(e.target.value);
-                    setLocationError("");
-                  }}
-                  className="flex-1 bg-transparent text-sm text-[#0F172A] outline-none cursor-pointer"
-                  aria-label="Select city"
-                >
-                  {TOP_TIER_CITIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={handleUseMyLocation}
-                  disabled={locating}
-                  className="shrink-0 text-xs font-semibold text-[#EA580C] hover:text-[#C2410C] disabled:opacity-60"
-                  aria-label="Use my current location"
-                >
-                  {locating ? "Locating…" : "Use location"}
-                </button>
+              <div className="relative flex-1">
+                <div className="flex items-center gap-2 bg-white border border-[#FCEAE1] rounded-xl px-4 py-3 shadow-sm focus-within:border-[#EA580C] focus-within:ring-2 focus-within:ring-[#EA580C]/20 transition-all">
+                  <MapPin
+                    size={18}
+                    className="text-[#EA580C] shrink-0"
+                    aria-hidden="true"
+                  />
+                  <input
+                    id="location-search"
+                    type="text"
+                    value={locationQuery}
+                    onChange={(e) => handleLocationInput(e.target.value)}
+                    placeholder="Start typing your city or area…"
+                    className="flex-1 bg-transparent text-sm text-[#0F172A] placeholder-[#64748B] outline-none"
+                    aria-label="Search for location"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleUseMyLocation}
+                    disabled={locating}
+                    className="shrink-0 text-xs font-semibold text-[#EA580C] hover:text-[#C2410C] disabled:opacity-60"
+                    aria-label="Use my current location"
+                  >
+                    {locating ? "Locating…" : "Use location"}
+                  </button>
+                </div>
+
+                {autocompleteResults.length > 0 && (
+                  <ul className="absolute z-50 mt-2 w-full overflow-hidden rounded-3xl border border-[#FCEAE1] bg-white shadow-xl">
+                    {autocompleteResults.map((prediction) => (
+                      <li
+                        key={prediction.id}
+                        onClick={() => handlePredictionSelect(prediction)}
+                        className="cursor-pointer px-4 py-3 text-left text-sm text-[#0F172A] hover:bg-[#F8F8F8]"
+                      >
+                        <span className="font-semibold">
+                          {prediction.display_name.split(",")[0]}
+                        </span>
+                        <span className="block text-xs text-[#64748B]">
+                          {prediction.display_name}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               <button
                 onClick={fetchProviders}
-                className="flex items-center justify-center gap-2 bg-[#EA580C] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#C2410C] active:scale-95 transition-all cursor-pointer shadow-sm"
+                className="flex items-center justify-center gap-2 bg-[#EA580C] text-white font-semibold px-6 py-[10px] rounded-xl hover:bg-[#C2410C] active:scale-95 transition-all cursor-pointer shadow-sm"
                 aria-label="Search for kitchens"
               >
                 <Search size={18} aria-hidden="true" />
                 Find Kitchens
               </button>
             </div>
-            {locationError ? (
-              <p className="mt-3 text-sm text-red-200/90" role="status">
-                {locationError}
-              </p>
-            ) : null}
+            <div className="mt-4 text-sm text-white/90 max-w-2xl mx-auto text-center">
+              <p className="font-semibold">Our service locations:</p>
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                {SERVICE_CITIES.map((city) => (
+                  <button
+                    key={city}
+                    type="button"
+                    onClick={() => {
+                      setLocationQuery(city);
+                      setSelectedCity(city);
+                      setLocationError("");
+                      setAutocompleteResults([]);
+                    }}
+                    className="rounded-full border border-white/30 bg-white/10 px-3 py-2 text-xs text-white hover:bg-white hover:text-[#0F172A] transition-colors"
+                  >
+                    {city}
+                  </button>
+                ))}
+              </div>
+              {locationError ? (
+                <p className="mt-3 text-sm text-red-200/90" role="status">
+                  {locationError}
+                </p>
+              ) : (
+                <p className="mt-3 text-sm text-white/80">
+                  Search and select one of the cities above for nearby student kitchens.
+                </p>
+              )}
+            </div>
           </div>
         </section>
 
@@ -415,6 +608,7 @@ export default function HomePage() {
         </section>
       </main>
 
+      <AskMe />
       <Footer />
     </div>
   );
