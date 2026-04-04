@@ -1,4 +1,4 @@
-# Mom's Magic
+# Mom's Magic #
 
 Home-cooked food marketplace built with Next.js (App Router) + PostgreSQL.
 
